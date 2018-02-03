@@ -74,8 +74,7 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file,
     task = (struct task_struct *)bpf_get_current_task();
     bpf_probe_read(&pid_link, sizeof(pid_link), (void *)&task->group_leader->pids[PIDTYPE_SID]);
     bpf_probe_read(&pid, sizeof(pid), (void *)pid_link.pid);
-		//sessionid = pid.numbers[0].nr;
-		sessionid = 3;
+		sessionid = pid.numbers[0].nr;
 
     // build session struct key
     struct sid_t sid_key;
