@@ -181,7 +181,8 @@ func upload(sid int, buf string) error {
 
 	req.Header.Add(sessionIDHTTPHeader, fmt.Sprintf("%d", sid))
 
-	res, err := (*http.Client).Do(req)
+	client := &http.Client{}
+	res, err := client.Do(req)
 	if err != nil {
 		return err
 	}
