@@ -81,10 +81,10 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file,
 		sid_key.sid = sessionid;
 		
 		// if sid does not exist in our map then return
-		u64 *time_ns = active_sids.lookup(&sid_key);
-    if (!time_ns) {
-        return 0;
-    }
+		//u64 *time_ns = active_sids.lookup(&sid_key);
+    //if (!time_ns) {
+    //    return 0;
+    //}
 
     // bpf_probe_read() can only use a fixed size, so truncate to count
     // in user space:
