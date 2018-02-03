@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/signal"
 	"unsafe"
+	"net/http"
 	"C"
 
 	bpf "github.com/iovisor/gobpf/bcc"
@@ -172,7 +173,8 @@ func main() {
 
 func upload(sid int, buf string) error {
 
-	req, err := http.NewRequest("POST", "http://127.0.0.1:5050/upload", &buf)
+	b := bytes.NewBufferString(buf)
+	req, err := http.NewRequest("POST", "http://127.0.0.1:5050/upload", &b)
 	if err != nil {
 		return err
 	}
@@ -184,4 +186,6 @@ func upload(sid int, buf string) error {
 		return err
 	}
 	defer res.Body.Close()
+
+	return nil
 }
