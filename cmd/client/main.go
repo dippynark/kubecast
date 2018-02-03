@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"flag"
 	"encoding/binary"
 	"fmt"
 	"os"
