@@ -117,6 +117,7 @@ func main() {
 	flag.Parse()
 
 	address := fmt.Sprintf("%s:%d", *server, *port)
+	fmt.Printf("%s", address)
 
 	m := bpf.NewModule(source, []string{})
 	defer m.Close()
