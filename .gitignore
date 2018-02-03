@@ -1,3 +1,4 @@
 .vscode
-server
+/server
+/client
 
