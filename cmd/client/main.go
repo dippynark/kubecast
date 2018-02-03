@@ -101,9 +101,9 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file,
 `
 
 type ttyWrite struct {
-	Count int32
+	Count int
 	Buf [bufferSize]byte
-	SessionID int32
+	SessionID int
 }
 
 func main() {
@@ -171,11 +171,6 @@ func main() {
 }
 
 func upload(sid int, buf string) error {
-	file, err := os.Open("./filename")
-	if err != nil {
-		panic(err)
-	}
-	defer file.Close()
 
 	req, err := http.NewRequest("POST", "http://127.0.0.1:5050/upload", &buf)
 	if err != nil {
