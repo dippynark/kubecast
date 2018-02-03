@@ -170,19 +170,19 @@ func main() {
 	perfMap.Stop()
 }
 
-func upload(sid string, buf string) error {
+func upload(sid int, buf string) error {
 	file, err := os.Open("./filename")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	req, err = http.NewRequest("POST", "http://127.0.0.1:5050/upload", &buf)
+	req, err := http.NewRequest("POST", "http://127.0.0.1:5050/upload", &buf)
 	if err != nil {
 		return err
 	}
 
-	req.Header.Add(sessionIDHTTPHeader, fmt.Sprintf("%s", sid))
+	req.Header.Add(sessionIDHTTPHeader, fmt.Sprintf("%d", sid))
 
 	res, err := http.Client.Do(req)
 	if err != nil {
