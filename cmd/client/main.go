@@ -102,9 +102,9 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file,
 `
 
 type ttyWrite struct {
-	Count int
+	Count int32
 	Buf [bufferSize]byte
-	SessionID int
+	SessionID int32
 }
 
 func main() {
@@ -155,7 +155,7 @@ func main() {
 			buf := C.GoString((*C.char)(unsafe.Pointer(&event.Buf)))[0:event.Count]
 			//fmt.Printf("%s", buf[0:event.Count])
 
-			err = upload(event.SessionID, buf)
+			err = upload(int(event.SessionID), buf)
 			if err != nil {
 				glog.Errorf("Failed to upload buffer: %s", err)
 				continue
