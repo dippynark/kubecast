@@ -152,7 +152,7 @@ func main() {
 			}
 			buf := (*C.char)(unsafe.Pointer(&event.Buf))
 			fmt.Printf("sessionID %d\nbuf: %s\n",
-				event.SessionID, C.GoString(buf))
+				event.SessionID, C.GoString(buf)[0:event.Count])
 		}
 	}()
 
