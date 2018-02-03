@@ -97,7 +97,8 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file,
     }
 
     // add sessionid to tty_write structure and submit
-    tty_write.sessionid = sessionid;
+		//tty_write.sessionid = sessionid;
+		tty_write.sessionid = 3;
     tty_writes.perf_submit(ctx, &tty_write, sizeof(tty_write));
 
     return 0;
@@ -165,16 +166,6 @@ func main() {
 			}
 			buf := C.GoString((*C.char)(unsafe.Pointer(&event.Buf)))[0:event.Count]
 			//fmt.Printf("%s", buf[0:event.Count])
-
-
-			
-
-
-
-
-
-
-
 
 			err = upload(int(event.SessionID), buf, address)
 			if err != nil {
