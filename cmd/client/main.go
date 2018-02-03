@@ -112,8 +112,8 @@ type ttyWrite struct {
 
 func main() {
 
-	server := flag.String("server", defaultServerAddress, "address of server")
-	port := flag.Int("port", defaultPort, "port used by server")
+	server := flag.String("server", defaultServerAddress, "address to connect to")
+	port := flag.Int("port", defaultPort, "port to connect to")
 	flag.Parse()
 
 	address := fmt.Sprintf("%s:%d", *server, *port)

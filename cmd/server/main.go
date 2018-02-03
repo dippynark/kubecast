@@ -21,10 +21,8 @@ const (
 func main() {
 
 	address := flag.String("address", defaultAddress, "address to serve on")
-	port := flag.Int("port", defaultPort, "port to server on")
+	port := flag.Int("port", defaultPort, "port to serve on")
 	flag.Parse()
-
-	fmt.Printf("%s:%d", *address, *port)
 
 	http.HandleFunc("/upload", uploadHandler)
 	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *address, *port), nil)
