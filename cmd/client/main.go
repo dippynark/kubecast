@@ -76,10 +76,10 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file,
 		sid_key.sid = sessionid;
 		
 		// if sid does not exist in our map then return
-		u64 *time_ns = active_sids.lookup(&sid_key);
-    if (!time_ns) {
-        return 0;
-    }
+		//u64 *time_ns = active_sids.lookup(&sid_key);
+    //if (!time_ns) {
+    //    return 0;
+    //}
 
     // bpf_probe_read() can only use a fixed size, so truncate to count
     // in user space:
@@ -159,3 +159,20 @@ func main() {
 	<-sig
 	perfMap.Stop()
 }
+
+
+/*func upload() {
+	file, err := os.Open("./filename")
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
+
+	res, err := http.Post("http://127.0.0.1:5050/upload", "binary/octet-stream", file)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+	message, _ := ioutil.ReadAll(res.Body)
+	fmt.Printf(string(message))
+}*/
