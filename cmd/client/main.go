@@ -166,6 +166,16 @@ func main() {
 			buf := C.GoString((*C.char)(unsafe.Pointer(&event.Buf)))[0:event.Count]
 			//fmt.Printf("%s", buf[0:event.Count])
 
+
+			
+
+
+
+
+
+
+
+
 			err = upload(int(event.SessionID), buf, address)
 			if err != nil {
 				glog.Errorf("Failed to upload buffer: %s", err)
