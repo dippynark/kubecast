@@ -108,6 +108,9 @@ type ttyWrite struct {
 }
 
 func main() {
+	
+	flag.CommandLine.Parse([]string{})
+
 	m := bpf.NewModule(source, []string{})
 	defer m.Close()
 
