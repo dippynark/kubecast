@@ -15,6 +15,7 @@ import (
 
 const (
 	bufferSize = 256
+	sessionIDHTTPHeader = "X-Session-ID"
 )
 
 const source string = `
@@ -150,8 +151,17 @@ func main() {
 				glog.Errorf("Failed to decode received data: %s", err)
 				continue
 			}
-			buf := (*C.char)(unsafe.Pointer(&event.Buf))
-			fmt.Printf("%s", C.GoString(buf)[0:event.Count])
+			buf := C.GoString((*C.char)(unsafe.Pointer(&event.Buf)))[0:event.Count]
+			//fmt.Printf("%s", buf[0:event.Count])
+
+			sid := event.SessionID			
+			err = upload(event.SessionID, buf)
+			if err != nil {
+				glog.Errorf("Failed to upload buffer: %s", err)
+				continue
+			}
+
+			glog.Infof("Successfully uploaded buffer with %d bytes", event.Count)
 		}
 	}()
 
@@ -160,19 +170,23 @@ func main() {
 	perfMap.Stop()
 }
 
-
-/*func upload() {
+func upload(sid string, buf string) error {
 	file, err := os.Open("./filename")
 	if err != nil {
 		panic(err)
 	}
 	defer file.Close()
 
-	res, err := http.Post("http://127.0.0.1:5050/upload", "binary/octet-stream", file)
+	req, err = http.NewRequest("POST", "http://127.0.0.1:5050/upload", &buf)
 	if err != nil {
-		panic(err)
+		return err
+	}
+
+	req.Header.Add(sessionIDHTTPHeader, fmt.Sprintf("%s", sid))
+
+	res, err := http.Client.Do(req)
+	if err != nil {
+		return err
 	}
 	defer res.Body.Close()
-	message, _ := ioutil.ReadAll(res.Body)
-	fmt.Printf(string(message))
-}*/
+}
