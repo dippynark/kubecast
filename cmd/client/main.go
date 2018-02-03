@@ -174,14 +174,14 @@ func main() {
 func upload(sid int, buf string) error {
 
 	b := bytes.NewBufferString(buf)
-	req, err := http.NewRequest("POST", "http://127.0.0.1:5050/upload", &b)
+	req, err := http.NewRequest("POST", "http://127.0.0.1:5050/upload", b)
 	if err != nil {
 		return err
 	}
 
 	req.Header.Add(sessionIDHTTPHeader, fmt.Sprintf("%d", sid))
 
-	res, err := http.Client.Do(req)
+	res, err := (*http.Client).Do(req)
 	if err != nil {
 		return err
 	}
