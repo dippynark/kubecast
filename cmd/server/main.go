@@ -14,7 +14,24 @@ import (
 
 const (
 	sessionIDHTTPHeader = "X-Session-ID"
+	defaultAddress      = "0.0.0.0"
+	defaultPort         = 5050
 )
+
+func main() {
+
+	address := flag.String("address", defaultAddress, "address to serve on")
+	port := flag.Int("port", defaultPort, "port to server on")
+	flag.Parse()
+
+	fmt.Printf("%s:%d", *address, *port)
+
+	http.HandleFunc("/upload", uploadHandler)
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *address, *port), nil)
+	if err != nil {
+		glog.Errorf("Error starting server: %s", err)
+	}
+}
 
 func uploadHandler(w http.ResponseWriter, r *http.Request) {
 
@@ -39,12 +56,4 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	glog.Info("%d bytes copied to %s", n, filename)
-}
-
-func main() {
-
-	flag.CommandLine.Parse([]string{})
-
-	http.HandleFunc("/upload", uploadHandler)
-	http.ListenAndServe(":5050", nil)
 }

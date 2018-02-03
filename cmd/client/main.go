@@ -18,6 +18,8 @@ import (
 const (
 	bufferSize = 256
 	sessionIDHTTPHeader = "X-Session-ID"
+	defaultServerAddress      = "localhost"
+	defaultPort         = 5050
 )
 
 const source string = `
@@ -110,7 +112,11 @@ type ttyWrite struct {
 
 func main() {
 
-	flag.CommandLine.Parse([]string{})
+	server := flag.String("server", defaultServerAddress, "address of server")
+	port := flag.Int("port", defaultPort, "port used by server")
+	flag.Parse()
+
+	address := fmt.Sprintf("%s:%d", *server, *port)
 
 	m := bpf.NewModule(source, []string{})
 	defer m.Close()
@@ -159,7 +165,7 @@ func main() {
 			buf := C.GoString((*C.char)(unsafe.Pointer(&event.Buf)))[0:event.Count]
 			//fmt.Printf("%s", buf[0:event.Count])
 
-			err = upload(int(event.SessionID), buf)
+			err = upload(int(event.SessionID), buf, address)
 			if err != nil {
 				glog.Errorf("Failed to upload buffer: %s", err)
 				continue
@@ -174,10 +180,10 @@ func main() {
 	perfMap.Stop()
 }
 
-func upload(sid int, buf string) error {
+func upload(sid int, buf string, address string) error {
 
 	b := bytes.NewBufferString(buf)
-	req, err := http.NewRequest("POST", "http://127.0.0.1:5050/upload", b)
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/upload", address), b)
 	if err != nil {
 		return err
 	}
