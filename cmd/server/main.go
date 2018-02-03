@@ -39,9 +39,9 @@ func uploadHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	//filename := fmt.Sprintf("session-%s", sessionID)
-	fmt.Printf("%s", sessionID)
-	filename := fmt.Sprintf("session-test")
+	filename := fmt.Sprintf("session-%s", sessionID)
+	//fmt.Printf("%s", sessionID)
+	//filename := fmt.Sprintf("session-test")
 
 	file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
 	defer file.Close()
