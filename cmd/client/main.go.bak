@@ -1,0 +1,165 @@
+package main
+
+import (
+	"bytes"
+	"flag"
+	"encoding/binary"
+	"fmt"
+	"os"
+	"os/signal"
+	"unsafe"
+	"net/http"
+	"C"
+
+	bpf "github.com/iovisor/gobpf/bcc"
+	"github.com/golang/glog"
+)
+
+const (
+	bufferSize = 256
+	sessionIDHTTPHeader = "X-Session-ID"
+	defaultServerAddress      = "localhost"
+	defaultPort         = 5050
+)
+
+type ttyWrite struct {
+	Count int32
+	Buf [bufferSize]byte
+	SessionID int32
+}
+
+func main() {
+
+	server := flag.String("server", defaultServerAddress, "address to connect to")
+	port := flag.Int("port", defaultPort, "port to connect to")
+	flag.Parse()
+
+	address := fmt.Sprintf("%s:%d", *server, *port)
+	//fmt.Printf("%s", address)
+
+	m := bpf.NewModule(source, []string{})
+	defer m.Close()
+
+	ttyWriteKprobe, err := m.LoadKprobe("kprobe__tty_write")
+	if err != nil {
+		glog.Fatalf("Failed to load kprobe__tty_write: %s", err)
+	}
+
+	err = m.AttachKprobe("tty_write", ttyWriteKprobe)
+	if err != nil {
+		glog.Fatalf("Failed to attach kprobe__tty_write: %s", err)
+	}
+
+	setsidUretprobe, err := m.LoadUprobe("save_sid")
+	if err != nil {
+		glog.Fatalf("Failed to load save_sid: %s", err)
+	}
+
+	err = m.AttachUretprobe("c", "setsid", setsidUretprobe, -1)
+	if err != nil {
+		glog.Fatalf("Failed to attach save_sid: %s", err)
+	}
+
+	table := bpf.NewTable(m.TableId("tty_writes"), m)
+
+	channel := make(chan []byte)
+
+	perfMap, err := bpf.InitPerfMap(table, channel)
+	if err != nil {
+		glog.Fatalf("Failed to init perf map: %s", err)
+	}
+
+	sig := make(chan os.Signal, 1)
+	signal.Notify(sig, os.Interrupt, os.Kill)
+
+	go func() {
+		var event ttyWrite
+		for {
+			data := <-channel
+			err := binary.Read(bytes.NewBuffer(data), binary.LittleEndian, &event)
+			if err != nil {
+				glog.Errorf("Failed to decode received data: %s", err)
+				continue
+			}
+			buf := C.GoString((*C.char)(unsafe.Pointer(&event.Buf)))[0:event.Count]
+			//fmt.Printf("%s", buf[0:event.Count])
+
+			err = upload(int(event.SessionID), buf, address)
+			if err != nil {
+				glog.Errorf("Failed to upload buffer: %s", err)
+				continue
+			}
+
+			glog.Infof("Successfully uploaded buffer with %d bytes", event.Count)
+		}
+	}()
+
+	perfMap.Start()
+	<-sig
+	perfMap.Stop()
+}
+
+func upload(sid int, buf string, address string) error {
+
+	b := bytes.NewBufferString(buf)
+	req, err := http.NewRequest("POST", fmt.Sprintf("http://%s/upload", address), b)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Add(sessionIDHTTPHeader, fmt.Sprintf("%d", sid))
+
+	client := &http.Client{}
+	res, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer res.Body.Close()
+
+	return nil
+}
+
+func loadProgram(fd int, key, value unsafe.Pointer, flags uint64) error {
+	uba := bpfAttrMapOpElem{
+		mapFd: uint32(fd),
+		key:   uint64(uintptr(key)),
+		value: uint64(uintptr(value)),
+		flags: uint64(flags),
+	}
+
+	ret, _, err := unix.Syscall(
+		unix.SYS_BPF,
+		BPF_MAP_UPDATE_ELEM,
+		uintptr(unsafe.Pointer(&uba)),
+		unsafe.Sizeof(uba),
+	)
+
+	if ret != 0 || err != 0 {
+		return fmt.Errorf("Unable to update element: %s", err)
+	}
+
+	return nil
+}
+
+func loadProgram(type string, )
+
+char bpf_log_buf[LOG_BUF_SIZE];
+
+int
+bpf_prog_load(enum bpf_prog_type type,
+              const struct bpf_insn *insns,
+              int insn_cnt,
+              const char *license)
+{
+    union bpf_attr attr = {
+        .prog_type = type,
+        .insns     = ptr_to_u64(insns),
+        .insn_cnt  = insn_cnt,
+        .license   = ptr_to_u64(license),
+        .log_buf   = ptr_to_u64(bpf_log_buf),
+        .log_size  = LOG_BUF_SIZE,
+        .log_level = 1,
+    };
+
+    return bpf(BPF_PROG_LOAD, &attr, sizeof(attr));
+}
