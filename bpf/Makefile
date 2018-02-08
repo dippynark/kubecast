@@ -1,9 +1,10 @@
-BPF = bpf_tty.o
+SHELL=/bin/bash -o pipefail
+DEST_DIR?=/dist
+LINUX_HEADERS=$(shell rpm -q kernel-devel --last | head -n 1 | awk -F'kernel-devel-' '{print "/usr/src/kernels/"$$2}' | cut -d " " -f 1)
 
-#-I/usr/src/linux-headers-4.13.0-32/include 
-
-CLANG ?= clang
-CLANG_FLAGS := -D__KERNEL__ -D__ASM_SYSREG_H \
+build:
+	@mkdir -p "$(DEST_DIR)"
+	clang -D__KERNEL__ -D__ASM_SYSREG_H \
 		-DCIRCLE_BUILD_URL=\"$(CIRCLE_BUILD_URL)\" \
 		-Wno-unused-value \
 		-Wno-pointer-sign \
@@ -11,16 +12,7 @@ CLANG_FLAGS := -D__KERNEL__ -D__ASM_SYSREG_H \
 		-Wunused \
 		-Wall \
 		-Werror \
-		-O2 -emit-llvm \
-		-Iinclude -I.
-
-LLC ?= llc
-LLC_FLAGS := -march=bpf -filetype=obj
-
-LIB := $(shell find ./lib -name '*.h')
-
-all: $(BPF)
-
-%.o: %.c $(LIB)
-	    ${CLANG} ${CLANG_FLAGS} -c $< -o - | ${LLC} ${LLC_FLAGS} -o $@; \
-			#rm bpf_tty.o
+		-O2 -emit-llvm -c bpf_tty.c \
+		$(foreach path,$(LINUX_HEADERS), -I $(path)/arch/x86/include -I $(path)/arch/x86/include/generated -I $(path)/include -I $(path)/include/generated/uapi -I $(path)/arch/x86/include/uapi -I $(path)/include/uapi) \
+		-o - | llc -march=bpf -filetype=obj -o "${DEST_DIR}/bpf_tty.o"
+	go-bindata -pkg tracer -prefix "${DEST_DIR}/" -modtime 1 -o "${DEST_DIR}/bpf_tty.go" "${DEST_DIR}/bpf_tty.o"

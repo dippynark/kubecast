@@ -1,11 +1,11 @@
-//void test() {}
+void test() {}
 
-#include <linux/ptrace.h>
+/*#include <linux/ptrace.h>
 
 int prog(struct pt_regs *ctx)
 {
     return 0;
-}
+}*/
 
 /*
 //#include <node_config.h>
