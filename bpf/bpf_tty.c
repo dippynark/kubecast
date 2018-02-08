@@ -1,5 +1,15 @@
-#include <node_config.h>
-#include <netdev_config.h>
+//void test() {}
+
+#include <linux/ptrace.h>
+
+int prog(struct pt_regs *ctx)
+{
+    return 0;
+}
+
+/*
+//#include <node_config.h>
+//#include <netdev_config.h>
 #include <filter_config.h>
 
 #include <bpf/api.h>
@@ -11,11 +21,12 @@
 #include <linux/if_ether.h>
 
 #include "lib/utils.h"
-#include "lib/common.h"
-#include "lib/maps.h"
+//#include "lib/common.h"
+//#include "lib/maps.h"
 #include "lib/xdp.h"
-#include "lib/eps.h"
+//#include "lib/eps.h"
 #include "lib/events.h"
+#include <linux/ptrace.h>
 
 // define structures
 enum pid_type
@@ -122,3 +133,5 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file, const char *buf, s
     
     return 0;
 }
+
+*/

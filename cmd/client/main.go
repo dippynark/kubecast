@@ -1,7 +1,16 @@
 package main
 
+/*
+#include <stdio.h>
+#include <stdlib.h>
+
+void print(char* s) {
+ printf("%s\n", s);
+}
+*/
+import "C"
+
 import (
-	"C"
 	"unsafe"
 
 	"golang.org/x/sys/unix"
@@ -34,53 +43,57 @@ type ttyWrite struct {
 	SessionID int32
 }
 
-func main() {
+func main() { 
 
-	b, err := ioutil.ReadFile("bpf/bbf_tty.o")
+  //for i := 0; i < 6; i++ {
+	//b, err := ioutil.ReadFile(fmt.Sprintf("bpf/test%d.o", i))
+	b, err := ioutil.ReadFile("bpf/bpf_tty.o")
 	if err != nil {
 		fmt.Print(err)
 	}
 
 	err = loadProgram(BPF_PROG_TYPE_KPROBE, unsafe.Pointer(&b), len(b))
 	if err != nil {
-		fmt.Printf("%s", err)
-		return
+		fmt.Printf("%s\n", err)
 	}
+	//}
 
 }
 
 func loadProgram(progType int, insns unsafe.Pointer, insnCnt int) error {
 
-	//logBuf := "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
-	//bufStr := C.CString(logBuf)
-	//defer C.free(unsafe.Pointer(bufStr))
+	licenseBuf := "GPL"
+	licenseStr := C.CString(licenseBuf)
+	defer C.free(unsafe.Pointer(licenseStr))
 
-	//fmt.Printf("%d\n", uint32(insnCnt))
+	logStr := C.CString("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+	defer C.free(unsafe.Pointer(logStr))
 
 	lba := struct {
-		progType    uint32
-		pad0        [4]byte
-		insnCnt     uint32
-		pad1        [4]byte
-		insns       uint64
-		license     uint64
-		logLevel    uint32
-		pad2        [4]byte
-		logSize     uint32
-		pad3        [4]byte
-		logBuf      uint64
+		progType uint32
+		//pad0        [4]byte
+		insnCnt uint32
+		//pad1        [4]byte
+		insns    uint64
+		license  uint64
+		logLevel uint32
+		//pad2        [4]byte
+		logSize uint32
+		//pad3    [4]byte
+		logBuf  uint64
 		kernVersion uint32
-		pad4        [4]byte
+		//pad4        [4]byte
 	}{
-		progType: uint32(progType),
-		insns:    uint64(uintptr(insns)),
+		progType: uint32(progType),		
 		insnCnt:  uint32(insnCnt),
-		license:  uint64(uintptr(0)),
-		logBuf:   uint64(uintptr(0)),
+		insns:    uint64(uintptr(insns)),
+		license:  uint64(uintptr(unsafe.Pointer(licenseStr))),		
+		logLevel: uint32(1),
+		logSize:  uint32(50),
+		logBuf:   uint64(uintptr(unsafe.Pointer(logStr))),
 		//logBuf: uint64(uintptr(unsafe.Pointer(bufStr))),
-		logSize:     uint32(0),
-		logLevel:    uint32(0),
-		kernVersion: uint32(4),
+		// /usr/src/linux-headers-4.13.0-32-generic/include/generated/uapi/linux/version.h
+		kernVersion: uint32(265485),
 	}
 
 	ret, _, err := unix.Syscall(
@@ -89,6 +102,11 @@ func loadProgram(progType int, insns unsafe.Pointer, insnCnt int) error {
 		uintptr(unsafe.Pointer(&lba)),
 		unsafe.Sizeof(lba),
 	)
+
+	//fmt.Printf("%s\n", logBuf)
+	//cs := C.CString("XXXXXXXXXX")
+	C.print(logStr)
+	//fmt.Printf("%c\n", *logStr)
 
 	if ret != 0 || err != 0 {
 		//fmt.Printf("%#v %d\n", logBuf, unsafe.Sizeof(lba))
