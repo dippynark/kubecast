@@ -1,32 +1,23 @@
-//void test() {}
+#include <linux/kconfig.h>
 
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu-variable-sized-type-not-at-end"
+#pragma clang diagnostic ignored "-Waddress-of-packed-member"
 #include <linux/ptrace.h>
-
-int prog(struct pt_regs *ctx)
-{
-    return 0;
-}
-
-/*
-//#include <node_config.h>
-//#include <netdev_config.h>
-#include <filter_config.h>
-
-#include <bpf/api.h>
-
-#include <stdint.h>
-#include <stdio.h>
-
+#pragma clang diagnostic pop
+#include <linux/version.h>
 #include <linux/bpf.h>
-#include <linux/if_ether.h>
+#include "bpf_helpers.h"
 
-#include "lib/utils.h"
-//#include "lib/common.h"
-//#include "lib/maps.h"
-#include "lib/xdp.h"
-//#include "lib/eps.h"
-#include "lib/events.h"
-#include <linux/ptrace.h>
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wtautological-compare"
+#pragma clang diagnostic ignored "-Wgnu-variable-sized-type-not-at-end"
+#pragma clang diagnostic ignored "-Wenum-conversion"
+#include <net/sock.h>
+#pragma clang diagnostic pop
+#include <net/inet_sock.h>
+#include <net/net_namespace.h>
+/*
 
 // define structures
 enum pid_type
@@ -55,23 +46,30 @@ struct task_struct {
   struct task_struct *group_leader;
   struct pid_link			pids[PIDTYPE_MAX];
 };
-struct sid_t {
-    int sid;
-};
-
 #define BUFSIZE 256
 struct tty_write_t {
     int count;
     char buf[BUFSIZE];
     unsigned int sessionid;
 };
+*/
+
+
+struct sid_t {
+    int sid;
+};
 
 // define maps
-struct bpf_elf_map __section_maps active_sids = {
-	.type		= BPF_MAP_TYPE_HASH,
-	.size_key	= sizeof(struct sid_t),
-	.size_value	= sizeof(uint64_t),
+struct bpf_map_def SEC("maps/active_sids") active_sids = {
+	.type = BPF_MAP_TYPE_HASH,
+	.key_size = sizeof(struct sid_t),
+	.value_size = sizeof(uint64_t),
+	.max_entries = 1024,
+	.pinning = 0,
+	.namespace = "",
 };
+
+/*
 
 struct bpf_elf_map __section_maps tty_writes = {
 	.type		= BPF_MAP_TYPE_PERF_EVENT_ARRAY,
