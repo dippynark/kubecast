@@ -41,10 +41,38 @@ func New() error {
 	channel := make(chan []byte)
 	lostChannel := make(chan uint64)
 
-	_, err = bpflib.InitPerfMap(m, "tty_writes", channel, lostChannel)
+	perfMap, err := bpflib.InitPerfMap(m, "tty_writes", channel, lostChannel)
 	if err != nil {
 		return fmt.Errorf("error initializing perf map: %s", err)
 	}
+
+	//perfMap.SetTimestampFunc(ttyWriteTimestamp)
+
+	stopChan := make(chan struct{})
+
+	go func() {
+		for {
+			select {
+			case <-stopChan:
+				// On stop, stopChan will be closed but the other channels will
+				// also be closed shortly after. The select{} has no priorities,
+				// therefore, the "ok" value must be checked below.
+				return
+			case data, ok := <-channel:
+				if !ok {
+					return // see explanation above
+				}
+				fmt.Printf("%#v\n", data)
+			case lost, ok := <-lostChannel:
+				if !ok {
+					return // see explanation above
+				}
+				fmt.Printf("%#v\n", lost)
+			}
+		}
+	}()
+
+	perfMap.PollStart()
 
 	return nil
 }
