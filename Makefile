@@ -18,7 +18,7 @@ SUDO=$(shell docker info >/dev/null 2>&1 || echo "sudo -E")
 
 all: build
 
-build: $(CMDS) bpf
+build: bpf $(CMDS) 
 
 $(CMDS):
 	GOOS=$(GOOS) GOARCH=$(GOARCH) go build \
@@ -41,7 +41,7 @@ build-bpf-object:
 	sudo chown -R $(UID):$(GID) bpf
 
 install-generated-go:
-	cp bpf/bpf_tty.go pkg/bpf/bpf_tty.go
+	cp bpf/bpf_tty.go pkg/kubepf/bpf_tty.go
 
 delete-docker-image:
 	$(SUDO) docker rmi -f $(DOCKER_IMAGE)

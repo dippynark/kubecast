@@ -2,14 +2,17 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
+	"os"
+
+	"github.com/dippynark/kubepf/pkg/kubepf"
 )
 
 func main() {
 
-	_, err := ioutil.ReadFile("bpf/bpf_tty.o")
+	err := kubepf.New()
 	if err != nil {
-		fmt.Print(err)
+		fmt.Printf("%v\n", err)
+		os.Exit(1)
 	}
 
 }

@@ -21,7 +21,7 @@ LLC ?= llc
 LLC_FLAGS := -march=bpf -filetype=obj
 
 GO_BINDATA := go-bindata
-GO_BINDATA_FLAGS := -pkg tracer -prefix "${DEST_DIR}/" -modtime 1
+GO_BINDATA_FLAGS := -pkg kubepf -prefix "${DEST_DIR}/" -modtime 1
 
 all: $(BPF)
 
