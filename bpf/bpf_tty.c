@@ -43,8 +43,10 @@ struct bpf_map_def SEC("maps/active_sids") active_sids = {
 struct bpf_map_def SEC("maps/tty_writes") tty_writes = {
 	.type = BPF_MAP_TYPE_PERF_EVENT_ARRAY,
 	.key_size = sizeof(int),
-	.value_size = sizeof(u32),
-	.max_entries = 2,
+	.value_size = sizeof(__u32),
+	.max_entries = 1024,
+	.pinning = 0,
+	.namespace = "",
 };
 
 /*
@@ -69,9 +71,9 @@ SEC("kprobe/tty_write")
 int kprobe__tty_write(struct pt_regs *ctx, struct file *file, const char __user *buf, size_t count)
 {
     struct task_struct *task;
-    struct pid_link pid_link;
+    struct pid_link pid_link;    
     struct pid pid;
-    int sessionid; 
+    int sessionid;
     
     // get current sessionid
     task = (struct task_struct *)bpf_get_current_task();
@@ -93,12 +95,28 @@ int kprobe__tty_write(struct pt_regs *ctx, struct file *file, const char __user 
 
     // bpf_probe_read() can only use a fixed size, so truncate to count
     // in user space:
-    struct tty_write_t tty_write = {};
-    bpf_probe_read(&tty_write.buf, BUFSIZE, (void *)buf); //(void *)buf);
-    if (count > BUFSIZE) {
+    // here we use the following mapping of registers to arguments
+    /*
+    R0 – rax      return value from function
+    R1 – rdi      1st argument
+    R2 – rsi      2nd argument
+    R3 – rdx      3rd argument
+    R4 – rcx      4th argument
+    R5 – r8       5th argument
+    R6 – rbx      callee saved
+    R7 - r13      callee saved
+    R8 - r14      callee saved
+    R9 - r15      callee saved
+    R10 – rbp     frame pointer
+    */
+    struct tty_write_t tty_write;
+    bpf_probe_read(&tty_write.buf, BUFSIZE, (void *)ctx->si); //(void *)buf);   
+
+    int tty_write_count = ctx->dx;
+    if (tty_write_count > BUFSIZE) {
         tty_write.count = BUFSIZE;
     } else {
-        tty_write.count = count;
+        tty_write.count = tty_write_count;
     }
     
     // add sessionid to tty_write structure and submit
