@@ -10,7 +10,7 @@ import (
 
 func main() {
 
-	err := kubepf.New()
+	err := kubepf.New(&kubepf.TtyWriteTracer{})
 	if err != nil {
 		fmt.Printf("%v\n", err)
 		os.Exit(1)
