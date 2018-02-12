@@ -1,3 +1,7 @@
+// disable randomised task struct
+#define randomized_struct_fields_start  struct {
+#define randomized_struct_fields_end    };
+
 #include <linux/kconfig.h>
 
 #pragma clang diagnostic push
@@ -61,6 +65,7 @@ SEC("kprobe/tty_write")
 int kprobe__tty_write(struct pt_regs *ctx)
 {
     struct task_struct *task;
+    struct task_struct *group_leader;
     struct pid_link pid_link;    
     struct pid pid;
     int sessionid;
@@ -68,7 +73,6 @@ int kprobe__tty_write(struct pt_regs *ctx)
     
     // get current sessionid
     task = (struct task_struct *)bpf_get_current_task();
-    struct task_struct *group_leader;
     bpf_probe_read(&group_leader, sizeof(group_leader), (void *)&task->group_leader);
     bpf_probe_read(&pid_link, sizeof(pid_link), (void *)&group_leader->pids[PIDTYPE_SID]);    
     bpf_probe_read(&pid, sizeof(pid), (void *)pid_link.pid);
@@ -89,9 +93,9 @@ int kprobe__tty_write(struct pt_regs *ctx)
         return 0;
     }*/
 
-    if(sessionid == 0) {
+    /*if(sessionid == 0) {
       return 0;
-    }
+    }*/
 
     // bpf_probe_read() can only use a fixed size, so truncate to count
     // in user space:
