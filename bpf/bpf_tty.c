@@ -52,7 +52,7 @@ int save_sid(struct pt_regs *ctx) {
     uint64_t time_ns = bpf_ktime_get_ns();
 
     sid_struct.sid = sid;
-    
+
     // BPF_ANY: create new element or update existing
     bpf_map_update_elem(&active_sids, &sid_struct, &time_ns, BPF_ANY);
 
@@ -60,46 +60,44 @@ int save_sid(struct pt_regs *ctx) {
 
 }
 
-
 SEC("kprobe/tty_write")
 int kprobe__tty_write(struct pt_regs *ctx)
 {
     struct task_struct *task;
     struct task_struct *group_leader;
-    struct pid_link pid_link;    
-    struct pid pid;
+    struct pid_link pid_link;
+    struct upid upid;
     int sessionid;
-    //u64 current_pid = bpf_get_current_pid_tgid();
-    
+
     // get current sessionid
     task = (struct task_struct *)bpf_get_current_task();
-    bpf_probe_read(&group_leader, sizeof(group_leader), (void *)&task->group_leader);
-    bpf_probe_read(&pid_link, sizeof(pid_link), (void *)&group_leader->pids[PIDTYPE_SID]);    
-    bpf_probe_read(&pid, sizeof(pid), (void *)pid_link.pid);
-    sessionid = pid.numbers[0].nr;
+    bpf_probe_read(&group_leader, sizeof(group_leader), (void *)task->group_leader);
+    bpf_probe_read(&pid_link, sizeof(pid_link), (void *)(group_leader->pids + PIDTYPE_SID));
+    bpf_probe_read(&upid, sizeof(upid), (void *)pid_link.pid->numbers);
+    sessionid = upid.nr;
 
     /*if(sessionid == current_pid) {
       // this is the session leader so return
       return 0;
     }*/
-   
+
     // build session struct key
     struct sid_t sid_key;
     sid_key.sid = sessionid;
-    
+
     // if sid does not exist in our map then return
     /*u64 *time_ns = bpf_map_lookup_elem(&active_sids, &sid_key);
     if (!time_ns) {
         return 0;
     }*/
 
-    /*if(sessionid == 0) {
+    if(sessionid == 0) {
       return 0;
-    }*/
+    }
 
     // bpf_probe_read() can only use a fixed size, so truncate to count
     // in user space:
-    // here we use the following mapping of registers to arguments
+    // we use the following mapping of registers to arguments
     /*
     R0 – rax      return value from function
     R1 – rdi      1st argument
@@ -122,12 +120,12 @@ int kprobe__tty_write(struct pt_regs *ctx)
     } else {
         tty_write.count = tty_write_count;
     }
-    
+
     // add sessionid to tty_write structure and submit
     tty_write.sessionid = sessionid;
     tty_write.timestamp = bpf_ktime_get_ns();
     bpf_perf_event_output(ctx, &tty_writes, 0, &tty_write, sizeof(tty_write));
-    
+
     return 0;
 }
 

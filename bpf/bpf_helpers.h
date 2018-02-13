@@ -148,6 +148,3 @@ static int (*bpf_l4_csum_replace)(void *ctx, int off, int from, int to, int flag
 #endif
 
 #endif
-
-
-
