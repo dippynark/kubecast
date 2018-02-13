@@ -71,10 +71,14 @@ int kprobe__tty_write(struct pt_regs *ctx)
 
     // get current sessionid
     task = (struct task_struct *)bpf_get_current_task();
-    bpf_probe_read(&group_leader, sizeof(group_leader), (void *)task->group_leader);
-    bpf_probe_read(&pid_link, sizeof(pid_link), (void *)(group_leader->pids + PIDTYPE_SID));
-    bpf_probe_read(&upid, sizeof(upid), (void *)pid_link.pid->numbers);
+    bpf_probe_read(&group_leader, sizeof(group_leader), &task->group_leader);
+    bpf_probe_read(&pid_link, sizeof(pid_link), group_leader->pids + PIDTYPE_SID);
+    bpf_probe_read(&upid, sizeof(upid), pid_link.pid->numbers);
     sessionid = upid.nr;
+
+    if(sessionid == 0) {
+      return 0;
+    }
 
     /*if(sessionid == current_pid) {
       // this is the session leader so return
@@ -90,10 +94,6 @@ int kprobe__tty_write(struct pt_regs *ctx)
     if (!time_ns) {
         return 0;
     }*/
-
-    if(sessionid == 0) {
-      return 0;
-    }
 
     // bpf_probe_read() can only use a fixed size, so truncate to count
     // in user space:

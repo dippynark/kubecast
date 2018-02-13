@@ -28,8 +28,8 @@ type TtyWriteTracer struct {
 }
 
 func (t *TtyWriteTracer) Print(ttyWrite TtyWrite) {
-	fmt.Printf("%s", ttyWrite.Buffer[0:ttyWrite.Count])
-	//fmt.Printf("%d\n", ttyWrite.SessionID)
+	//fmt.Printf("%s", ttyWrite.Buffer[0:ttyWrite.Count])
+	fmt.Printf("%d\n", ttyWrite.SessionID)
 
 	if t.lastTimestamp > ttyWrite.Timestamp {
 		fmt.Printf("ERROR: late event!\n")
