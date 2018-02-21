@@ -67,18 +67,20 @@ int kprobe__tty_write(struct pt_regs *ctx)
     struct task_struct *group_leader;
     struct pid_link pid_link;
     struct pid pid;
-    int sessionid;
+    unsigned int sessionid;
+
+    //task->group_leader->pids[PIDTYPE_SID].pid.numbers[0].nr;
 
     // get current sessionid
     task = (struct task_struct *)bpf_get_current_task();
     bpf_probe_read(&group_leader, sizeof(group_leader), &task->group_leader);
-    bpf_probe_read(&pid_link, sizeof(pid_link), group_leader->pids + PIDTYPE_SID);
+    bpf_probe_read(&pid_link, sizeof(pid_link), group_leader->pids + PIDTYPE_PID);
     bpf_probe_read(&pid, sizeof(pid), pid_link.pid);
     sessionid = pid.numbers[0].nr;
 
-    if(sessionid == 0) {
-      return 0;
-    }
+    //if(sessionid == 0) {
+    //  return 0;
+    //}
 
     /*if(sessionid == current_pid) {
       // this is the session leader so return
@@ -122,7 +124,7 @@ int kprobe__tty_write(struct pt_regs *ctx)
     }
 
     // add sessionid to tty_write structure and submit
-    tty_write.sessionid = sessionid;
+    tty_write.sessionid = (unsigned int)sessionid;
     tty_write.timestamp = bpf_ktime_get_ns();
     bpf_perf_event_output(ctx, &tty_writes, 0, &tty_write, sizeof(tty_write));
 
