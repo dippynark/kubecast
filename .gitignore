@@ -1,5 +1,4 @@
 .vscode
-/server
 /client
 /client_linux_amd64
 /server_linux_amd64
