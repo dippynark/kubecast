@@ -35,7 +35,6 @@ build-bpf-object:
 		-e CIRCLE_BUILD_URL=$(CIRCLE_BUILD_URL) \
 		-v $(PWD):/src:ro \
 		-v $(PWD)/bpf:/dist/ \
-		-v $(PWD)/linux-headers:/linux-headers \
 		--workdir=/src/bpf \
 		$(DOCKER_IMAGE) \
 		make all
