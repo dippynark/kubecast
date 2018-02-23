@@ -48,7 +48,7 @@ static unsigned long long (*bpf_get_prandom_u32)(void) =
 
 static u64 (*bpf_get_current_task)(void) =
   (void *) BPF_FUNC_get_current_task;
-static int (*bpf_probe_read_str)(void *dst, int size, void *unsafe_ptr) =
+static u64 (*bpf_probe_read_str)(void *dst, int size, void *unsafe_ptr) =
 	(void *) BPF_FUNC_probe_read;
 
 /* llvm builtin functions that eBPF C program may use to

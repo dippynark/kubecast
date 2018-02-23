@@ -1,8 +1,10 @@
 SHELL=/bin/bash -o pipefail
-LINUX_HEADERS=$(shell rpm -q kernel-devel --last | head -n 1 | awk -F'kernel-devel-' '{print "/usr/src/kernels/"$$2}' | cut -d " " -f 1)
+LINUX_HEADERS=$(shell uname -r | awk '{print "/usr/src/linux-headers-"$$1}')
 DEST_DIR?=/dist
 
 BPF = bpf_tty.o
+
+#-Werror \
 
 CLANG ?= clang
 CLANG_FLAGS := -D__KERNEL__ -D__ASM_SYSREG_H \
@@ -13,7 +15,6 @@ CLANG_FLAGS := -D__KERNEL__ -D__ASM_SYSREG_H \
 	-Wno-compare-distinct-pointer-types \
 	-Wunused \
 	-Wall \
-	-Werror \
 	-O2 -emit-llvm \
 	$(foreach path,$(LINUX_HEADERS), -I $(path)/arch/x86/include -I $(path)/arch/x86/include/generated -I $(path)/include -I $(path)/include/generated/uapi -I $(path)/arch/x86/include/uapi -I $(path)/include/uapi)
 
@@ -29,6 +30,4 @@ all: $(BPF)
 	@mkdir -p "$(DEST_DIR)"
 	${CLANG} ${CLANG_FLAGS} -c $< -o - | ${LLC} ${LLC_FLAGS} -o "${DEST_DIR}/$@"; \
 	${GO_BINDATA} ${GO_BINDATA_FLAGS} -o "${DEST_DIR}/$(@:.o=.go)" "${DEST_DIR}/$@"
-
-
 

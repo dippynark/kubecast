@@ -1,15 +1,16 @@
 package kubepf
 
 import (
+	"syscall"
 	"bytes"
 	"fmt"
 	"unsafe"
-	"os"
 
 	bpflib "github.com/iovisor/gobpf/elf"
 )
 
 /*
+#include <linux/bpf.h>
 #include "../../bpf/bpf_tty.h"
 */
 import "C"
@@ -23,23 +24,11 @@ const (
 	bufferSize = 256
 )
 
-type TtyWriteTracer struct {
-	lastTimestamp uint64
+type sidT struct {
+	sid int
 }
 
-func (t *TtyWriteTracer) Print(ttyWrite TtyWrite) {
-	//fmt.Printf("%s", ttyWrite.Buffer[0:ttyWrite.Count])
-	fmt.Printf("%d\n", ttyWrite.SessionID)
-
-	if t.lastTimestamp > ttyWrite.Timestamp {
-		fmt.Printf("ERROR: late event!\n")
-		os.Exit(1)
-	}
-
-	t.lastTimestamp = ttyWrite.Timestamp
-}
-
-func New(cb Callback) error {
+func New(channel chan []byte, lostChannel chan uint64) error {
 
 	buf, err := Asset("bpf_tty.o")
 	if err != nil {
@@ -64,8 +53,12 @@ func New(cb Callback) error {
 		return fmt.Errorf("failed to enable kprobes: %s", err)
 	}
 
-	channel := make(chan []byte)
-	lostChannel := make(chan uint64)
+	// add current session ID to excluded_sids map
+	excludedSidsMap := m.Map("excluded_sids")
+	sid, _, _ := syscall.Syscall(syscall.SYS_GETSID, 0, 0, 0)
+	key := sidT{sid: int(sid)}
+	value := 1
+	m.UpdateElement(excludedSidsMap, unsafe.Pointer(&key), unsafe.Pointer(&value), C.BPF_ANY)
 
 	perfMap, err := bpflib.InitPerfMap(m, "tty_writes", channel, lostChannel)
 	if err != nil {
@@ -74,55 +67,9 @@ func New(cb Callback) error {
 
 	perfMap.SetTimestampFunc(ttyWriteTimestamp)
 
-	stopChan := make(chan struct{})
-
-	go func() {
-		for {
-			select {
-			case <-stopChan:
-				// On stop, stopChan will be closed but the other channels will
-				// also be closed shortly after. The select{} has no priorities,
-				// therefore, the "ok" value must be checked below.
-				return
-			case ttyWrite, ok := <-channel:
-				if !ok {
-					return // see explanation above
-				}
-				ttyWriteGo := ttyWriteToGo(&ttyWrite)
-				//fmt.Printf("%d\n", ttyWrite.Count)
-				//fmt.Printf("%s", ttyWriteGo.Buffer[0:ttyWriteGo.Count])
-				cb.Print(ttyWriteGo)
-			case _, ok := <-lostChannel:
-				if !ok {
-					return // see explanation above
-				}
-				//fmt.Printf("%#v\n", lost)
-			}
-		}
-	}()
-
 	perfMap.PollStart()
 
 	return nil
-}
-
-type TtyWrite struct {
-	Count    uint32
-	Buffer   string
-	SessionID uint32
-	Timestamp uint64
-}
-
-func ttyWriteToGo(data *[]byte) (ret TtyWrite) {
-
-	ttyWrite := (*C.struct_tty_write_t)(unsafe.Pointer(&(*data)[0]))
-
-	ret.Count = uint32(ttyWrite.count)
-	ret.Buffer = C.GoString(&ttyWrite.buf[0])
-	ret.SessionID = uint32(ttyWrite.sessionid)
-	ret.Timestamp = uint64(ttyWrite.timestamp)
-
-	return
 }
 
 func ttyWriteTimestamp(data *[]byte) uint64 {

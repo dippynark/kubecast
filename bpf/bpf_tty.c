@@ -24,11 +24,11 @@
 #include <net/net_namespace.h>
 
 // define maps
-struct bpf_map_def SEC("maps/active_sids") active_sids = {
+struct bpf_map_def SEC("maps/excluded_sids") excluded_sids = {
 	.type = BPF_MAP_TYPE_HASH,
 	.key_size = sizeof(struct sid_t),
 	.value_size = sizeof(uint64_t),
-	.max_entries = 1024,
+	.max_entries = 10,
 	.pinning = 0,
 	.namespace = "",
 };
@@ -42,24 +42,6 @@ struct bpf_map_def SEC("maps/tty_writes") tty_writes = {
 	.namespace = "",
 };
 
-
-// save_sid saves a sessionid generated from a call
-// to setsid to the active_sids map
-int save_sid(struct pt_regs *ctx) {
-
-    struct sid_t sid_struct = {};
-    int sid = PT_REGS_RC(ctx);
-    uint64_t time_ns = bpf_ktime_get_ns();
-
-    sid_struct.sid = sid;
-
-    // BPF_ANY: create new element or update existing
-    bpf_map_update_elem(&active_sids, &sid_struct, &time_ns, BPF_ANY);
-
-    return 0;
-
-}
-
 SEC("kprobe/tty_write")
 int kprobe__tty_write(struct pt_regs *ctx)
 {
@@ -67,52 +49,27 @@ int kprobe__tty_write(struct pt_regs *ctx)
     struct task_struct *group_leader;
     struct pid_link pid_link;
     struct pid pid;
-    unsigned int sessionid;
-
-    //task->group_leader->pids[PIDTYPE_SID].pid.numbers[0].nr;
+    int sessionid;
 
     // get current sessionid
     task = (struct task_struct *)bpf_get_current_task();
     bpf_probe_read(&group_leader, sizeof(group_leader), &task->group_leader);
-    bpf_probe_read(&pid_link, sizeof(pid_link), group_leader->pids + PIDTYPE_PID);
+    bpf_probe_read(&pid_link, sizeof(pid_link), group_leader->pids + PIDTYPE_SID);
     bpf_probe_read(&pid, sizeof(pid), pid_link.pid);
     sessionid = pid.numbers[0].nr;
-
-    //if(sessionid == 0) {
-    //  return 0;
-    //}
-
-    /*if(sessionid == current_pid) {
-      // this is the session leader so return
-      return 0;
-    }*/
 
     // build session struct key
     struct sid_t sid_key;
     sid_key.sid = sessionid;
 
     // if sid does not exist in our map then return
-    /*u64 *time_ns = bpf_map_lookup_elem(&active_sids, &sid_key);
-    if (!time_ns) {
+    u64 *exists = bpf_map_lookup_elem(&excluded_sids, &sid_key);
+    if (exists) {
         return 0;
-    }*/
+    }
 
     // bpf_probe_read() can only use a fixed size, so truncate to count
     // in user space:
-    // we use the following mapping of registers to arguments
-    /*
-    R0 – rax      return value from function
-    R1 – rdi      1st argument
-    R2 – rsi      2nd argument
-    R3 – rdx      3rd argument
-    R4 – rcx      4th argument
-    R5 – r8       5th argument
-    R6 – rbx      callee saved
-    R7 - r13      callee saved
-    R8 - r14      callee saved
-    R9 - r15      callee saved
-    R10 – rbp     frame pointer
-    */
     struct tty_write_t tty_write;
     bpf_probe_read(&tty_write.buf, BUFSIZE, (void *)ctx->si);
 
