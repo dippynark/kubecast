@@ -14,7 +14,7 @@ This project is strictly alpha. kubepf injects code that is run in kernel space.
 
 ### Prerequisites
 
-Kernel for eBPF is relatively recent. In order for this project to work, you need to be running at least version 4.8. Additionally, due to a change in the kernel, version 4.13 will not work. However, this change was reversed in 4.14.
+- Kernel version 4.8 or above
 
 ### Build
 
