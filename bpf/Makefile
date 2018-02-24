@@ -4,8 +4,6 @@ DEST_DIR?=/dist
 
 BPF = bpf_tty.o
 
-#-Werror \
-
 CLANG ?= clang
 CLANG_FLAGS := -D__KERNEL__ -D__ASM_SYSREG_H \
 	-DCIRCLE_BUILD_URL=\"$(CIRCLE_BUILD_URL)\" \
