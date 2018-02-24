@@ -3,25 +3,12 @@
 #define randomized_struct_fields_end    };
 
 #include <linux/kconfig.h>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-variable-sized-type-not-at-end"
-#pragma clang diagnostic ignored "-Waddress-of-packed-member"
 #include <linux/ptrace.h>
-#pragma clang diagnostic pop
 #include <linux/version.h>
 #include <linux/bpf.h>
+
 #include "bpf_helpers.h"
 #include "bpf_tty.h"
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wtautological-compare"
-#pragma clang diagnostic ignored "-Wgnu-variable-sized-type-not-at-end"
-#pragma clang diagnostic ignored "-Wenum-conversion"
-#include <net/sock.h>
-#pragma clang diagnostic pop
-#include <net/inet_sock.h>
-#include <net/net_namespace.h>
 
 // define maps
 struct bpf_map_def SEC("maps/excluded_sids") excluded_sids = {
@@ -89,6 +76,4 @@ int kprobe__tty_write(struct pt_regs *ctx)
 }
 
 char _license[] SEC("license") = "GPL";
-// this number will be interpreted by gobpf-elf-loader to set the current
-// running kernel version
-__u32 _version SEC("version") = 0xFFFFFFFE;
+u32 _version SEC("version") = LINUX_VERSION_CODE;
