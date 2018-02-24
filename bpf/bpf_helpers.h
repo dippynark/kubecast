@@ -45,11 +45,8 @@ static int (*bpf_skb_set_tunnel_key)(void *ctx, void *key, int size, int flags) 
 	(void *) BPF_FUNC_skb_set_tunnel_key;
 static unsigned long long (*bpf_get_prandom_u32)(void) =
 	(void *) BPF_FUNC_get_prandom_u32;
-
-static u64 (*bpf_get_current_task)(void) =
+static unsigned long long (*bpf_get_current_task)(void) =
   (void *) BPF_FUNC_get_current_task;
-static u64 (*bpf_probe_read_str)(void *dst, int size, void *unsafe_ptr) =
-	(void *) BPF_FUNC_probe_read;
 
 /* llvm builtin functions that eBPF C program may use to
  * emit BPF_LD_ABS and BPF_LD_IND instructions
