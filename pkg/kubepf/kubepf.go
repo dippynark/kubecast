@@ -5,8 +5,11 @@ import (
 	"bytes"
 	"fmt"
 	"unsafe"
+	"net/http"
+	"errors"
 
 	bpflib "github.com/iovisor/gobpf/elf"
+	"github.com/golang/glog"
 )
 
 /*
@@ -22,7 +25,19 @@ const (
 	// amount of processes blocked on the tty_write syscall).
 	maxActive  = 128
 	bufferSize = 256
+	sessionIDHTTPHeader  = "X-Session-ID"
 )
+
+type TtyWriteTracer struct {
+	lastTimestamp uint64
+}
+
+type ttyWrite struct {
+	Count     uint32
+	Buffer    string
+	SessionID uint32
+	Timestamp uint64
+}
 
 type sidT struct {
 	sid int
@@ -32,25 +47,25 @@ func New(channel chan []byte, lostChannel chan uint64) error {
 
 	buf, err := Asset("bpf_tty.o")
 	if err != nil {
-		return fmt.Errorf("could not find asset: %s", err)
+		return err
 	}
 	reader := bytes.NewReader(buf)
 
 	m := bpflib.NewModuleFromReader(reader)
 	if m == nil {
-		return fmt.Errorf("BPF not supported")
+		return errors.New("error creating new module")
 	}
 
 	sectionParams := make(map[string]bpflib.SectionParams)
 	sectionParams["maps/tty_writes"] = bpflib.SectionParams{PerfRingBufferPageCount: 256}
 	err = m.Load(sectionParams)
 	if err != nil {
-		return fmt.Errorf("failed to load BPF module: %s", err)
+		return err
 	}
 
 	err = m.EnableKprobes(0)
 	if err != nil {
-		return fmt.Errorf("failed to enable kprobes: %s", err)
+		return err
 	}
 
 	// add current session ID to excluded_sids map
@@ -62,7 +77,7 @@ func New(channel chan []byte, lostChannel chan uint64) error {
 
 	perfMap, err := bpflib.InitPerfMap(m, "tty_writes", channel, lostChannel)
 	if err != nil {
-		return fmt.Errorf("error initializing perf map: %s", err)
+		return err
 	}
 
 	perfMap.SetTimestampFunc(ttyWriteTimestamp)
@@ -75,4 +90,43 @@ func New(channel chan []byte, lostChannel chan uint64) error {
 func ttyWriteTimestamp(data *[]byte) uint64 {
 	ttyWrite := (*C.struct_tty_write_t)(unsafe.Pointer(&(*data)[0]))
 	return uint64(ttyWrite.timestamp)
+}
+
+func TtyWriteToGo(data *[]byte) (ret ttyWrite) {
+
+	ttyWrite := (*C.struct_tty_write_t)(unsafe.Pointer(&(*data)[0]))
+
+	ret.Count = uint32(ttyWrite.count)
+	ret.Buffer = C.GoString(&ttyWrite.buf[0])
+	ret.SessionID = uint32(ttyWrite.sessionid)
+	ret.Timestamp = uint64(ttyWrite.timestamp)
+
+	return
+}
+
+func (t *TtyWriteTracer) Upload(ttyWrite ttyWrite, server string) {
+
+	payload := bytes.NewBufferString(ttyWrite.Buffer[0:ttyWrite.Count])
+	req, err := http.NewRequest("POST", server, payload)
+	if err != nil {
+		glog.Errorf("error creating new request: %s", err)
+		return
+	}
+	req.Header.Set(sessionIDHTTPHeader, fmt.Sprintf("%d", ttyWrite.SessionID))
+	req.Header.Set("Content-Type", "binary/octet-stream")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		glog.Errorf("error uploading data: %s", err)
+		return
+	}
+	glog.Infof("uploaded %d bytes", ttyWrite.Count)
+	defer resp.Body.Close()
+
+	if t.lastTimestamp > ttyWrite.Timestamp {
+		glog.Fatal("late event!")
+	}
+
+	t.lastTimestamp = ttyWrite.Timestamp
 }
