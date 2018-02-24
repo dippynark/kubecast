@@ -12,6 +12,7 @@
   name = "github.com/iovisor/gobpf"
   packages = [
     "elf",
+    "elf/include",
     "pkg/bpffs",
     "pkg/cpuonline"
   ]
