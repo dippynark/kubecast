@@ -3,6 +3,10 @@ package main
 import (
 	"flag"
 	"fmt"
+	"bufio"
+	"os"
+	"strconv"
+	"strings"
 
 	"github.com/dippynark/kubepf/pkg/kubepf"
 	"github.com/golang/glog"
@@ -15,35 +19,56 @@ const (
 
 func main() {
 
-	address := flag.String("server", defaultServerAddress, "address of server")
-	port := flag.Int("port", defaultPort, "port to connect to")
 	flag.Parse()
 
 	channel := make(chan []byte)
 	lostChannel := make(chan uint64)
 
-	err := kubepf.New(channel, lostChannel)
+	ttyWriteTracer, err := kubepf.New(channel, lostChannel)
 	if err != nil {
 		glog.Fatalf("failed to load BPF module: %s", err)
 	}
-	glog.Info("loaded BPF program successfullly")
+	glog.Info("loaded BPF program successfully")
 
-	t := &kubepf.TtyWriteTracer{}
+	go func() {
+		for {
+			select {
+			case ttyWrite, ok := <-channel:
+				if !ok {
+					glog.Fatal("channel closed")
+				}
+				ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
+				fmt.Printf("%s", ttyWriteGo.Buffer[0:ttyWriteGo.Count])
+			case lost, ok := <-lostChannel:
+				if !ok {
+					glog.Fatal("lost channel closed")
+				}
+				glog.Error("data lost: %#v", lost)
+			}
+		}
+	}()
 
 	for {
-		select {
-		case ttyWrite, ok := <-channel:
-			if !ok {
-				glog.Fatal("channel closed")
-			}
-			ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
-			t.Upload(ttyWriteGo, fmt.Sprintf("http://%s:%d/upload", *address, *port))
-		case lost, ok := <-lostChannel:
-			if !ok {
-				glog.Fatal("lost channel closed")
-			}
-			glog.Error("data lost: %#v", lost)
+		fmt.Print("Enter SID: ")
+                reader := bufio.NewReader(os.Stdin)
+		sidString, _ := reader.ReadString('\n')
+		sidString = strings.TrimSuffix(sidString, "\n")
+		sid, err := strconv.Atoi(sidString)
+		if err != nil {
+			glog.Errorf("could not convert SID %s to integer: %s", sidString, err)
+			continue
+		}
+                fmt.Printf("SID: %d\n", sid)
+		err = ttyWriteTracer.SetActiveSID(sid)
+		if err != nil {
+			glog.Errorf("failed to set active SID: %s", err)
+			continue
 		}
 	}
 
 }
+
+
+
+
+

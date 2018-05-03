@@ -30,6 +30,7 @@ const (
 
 type TtyWriteTracer struct {
 	lastTimestamp uint64
+	module *bpflib.Module
 }
 
 type ttyWrite struct {
@@ -43,29 +44,29 @@ type sidT struct {
 	sid int
 }
 
-func New(channel chan []byte, lostChannel chan uint64) error {
+func New(channel chan []byte, lostChannel chan uint64) (*TtyWriteTracer, error) {
 
 	buf, err := Asset("bpf_tty.o")
 	if err != nil {
-		return err
+		return nil, err
 	}
 	reader := bytes.NewReader(buf)
 
 	m := bpflib.NewModuleFromReader(reader)
 	if m == nil {
-		return errors.New("error creating new module")
+		return nil, errors.New("error creating new module")
 	}
 
 	sectionParams := make(map[string]bpflib.SectionParams)
 	sectionParams["maps/tty_writes"] = bpflib.SectionParams{PerfRingBufferPageCount: 256}
 	err = m.Load(sectionParams)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	err = m.EnableKprobes(0)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	// add current session ID to excluded_sids map
@@ -77,19 +78,26 @@ func New(channel chan []byte, lostChannel chan uint64) error {
 
 	perfMap, err := bpflib.InitPerfMap(m, "tty_writes", channel, lostChannel)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	perfMap.SetTimestampFunc(ttyWriteTimestamp)
 
 	perfMap.PollStart()
 
-	return nil
+	return &TtyWriteTracer{module: m}, nil
 }
 
 func ttyWriteTimestamp(data *[]byte) uint64 {
 	ttyWrite := (*C.struct_tty_write_t)(unsafe.Pointer(&(*data)[0]))
 	return uint64(ttyWrite.timestamp)
+}
+
+func (t *TtyWriteTracer) SetActiveSID(sid int) error {
+	activeSidMap := t.module.Map("active_sid")
+	key := 0
+	value := sidT{sid: int(sid)}
+	return t.module.UpdateElement(activeSidMap, unsafe.Pointer(&key), unsafe.Pointer(&value), C.BPF_ANY)
 }
 
 func TtyWriteToGo(data *[]byte) (ret ttyWrite) {
