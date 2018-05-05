@@ -36,7 +36,6 @@ type TtyWriteTracer struct {
 type ttyWrite struct {
 	Count     uint32
 	Buffer    string
-	SessionID uint32
 	Timestamp uint64
 }
 
@@ -106,7 +105,6 @@ func TtyWriteToGo(data *[]byte) (ret ttyWrite) {
 
 	ret.Count = uint32(ttyWrite.count)
 	ret.Buffer = C.GoString(&ttyWrite.buf[0])
-	ret.SessionID = uint32(ttyWrite.sessionid)
 	ret.Timestamp = uint64(ttyWrite.timestamp)
 
 	return
