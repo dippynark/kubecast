@@ -3,11 +3,8 @@
 #define BUFSIZE 256
 
 struct tty_write_t {
-    __u64 timestamp;
     __u32 count;
     char buf[BUFSIZE];
+    __u64 timestamp;
+    __u64 ino;
 };
-
-struct tty_t {
-    unsigned long ino;
-}

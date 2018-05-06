@@ -3,11 +3,9 @@ package main
 import (
 	"flag"
 	"fmt"
-	"bufio"
 	"os"
-	"strconv"
-	"strings"
 
+	"github.com/dippynark/kubepf/pkg/asciinema"
 	"github.com/dippynark/kubepf/pkg/kubepf"
 	"github.com/golang/glog"
 )
@@ -24,51 +22,48 @@ func main() {
 	channel := make(chan []byte)
 	lostChannel := make(chan uint64)
 
-	ttyWriteTracer, err := kubepf.New(channel, lostChannel)
+	err := kubepf.New(channel, lostChannel)
 	if err != nil {
 		glog.Fatalf("failed to load BPF module: %s", err)
 	}
 	glog.Info("loaded BPF program successfully")
 
-	go func() {
-		for {
-			select {
-			case ttyWrite, ok := <-channel:
-				if !ok {
-					glog.Fatal("channel closed")
-				}
-				ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
-				fmt.Printf("%s", ttyWriteGo.Buffer[0:ttyWriteGo.Count])
-			case lost, ok := <-lostChannel:
-				if !ok {
-					glog.Fatal("lost channel closed")
-				}
-				glog.Error("data lost: %#v", lost)
-			}
-		}
-	}()
+	files := make(map[uint64](*os.File))
 
 	for {
-		fmt.Print("Enter SID: ")
-                reader := bufio.NewReader(os.Stdin)
-		sidString, _ := reader.ReadString('\n')
-		sidString = strings.TrimSuffix(sidString, "\n")
-		sid, err := strconv.Atoi(sidString)
-		if err != nil {
-			glog.Errorf("could not convert SID %s to integer: %s", sidString, err)
-			continue
-		}
-                fmt.Printf("SID: %d\n", sid)
-		err = ttyWriteTracer.SetActiveSID(sid)
-		if err != nil {
-			glog.Errorf("failed to set active SID: %s", err)
-			continue
+		select {
+		case ttyWrite, ok := <-channel:
+
+			if !ok {
+				glog.Fatal("channel closed")
+			}
+			ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
+
+			file, ok := files[ttyWriteGo.Inode]
+			if !ok {
+				file, err = os.OpenFile(fmt.Sprintf("%d.json", ttyWriteGo.Inode), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0775)
+				if err != nil {
+					glog.Fatalf("failed to open file %s", fmt.Sprintf("%d.json", ttyWriteGo.Inode))
+				}
+				files[ttyWriteGo.Inode] = file
+				defer file.Close()
+
+				err = asciinema.Init(&ttyWriteGo, file)
+				if err != nil {
+					glog.Fatalf("failed to initialise: %s", err)
+				}
+			}
+
+			err = asciinema.Append(&ttyWriteGo, file)
+			if err != nil {
+				glog.Fatalf("failed to write entry: %s", err)
+			}
+
+		case lost, ok := <-lostChannel:
+			if !ok {
+				glog.Fatal("lost channel closed")
+			}
+			glog.Errorf("data lost: %#v", lost)
 		}
 	}
-
 }
-
-
-
-
-

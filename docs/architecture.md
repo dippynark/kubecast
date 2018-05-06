@@ -22,4 +22,7 @@ available_sids:
   - key: sid_t
   - value: uint64_t
 
+Problems:
+- If someone cats a binary, then ecents are missed
+- Websockets
 
