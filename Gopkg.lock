@@ -12,15 +12,20 @@
   name = "github.com/iovisor/gobpf"
   packages = [
     "elf",
-    "elf/include",
     "pkg/bpffs",
     "pkg/cpuonline"
   ]
   revision = "81c26b7026fa174bd0ac0e26f3c29ba66fd9b2c0"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/net"
+  packages = ["websocket"]
+  revision = "640f4622ab692b87c2f3a94265e6f579fe38263d"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "9d034134647fd8099b43a7fbd828d243b01c6d2a6ace969408af341d0407ed12"
+  inputs-digest = "67d0f76197447c5d8e9d649a3fec6c7c33c81872c3a2d06956ff224a53fa73a1"
   solver-name = "gps-cdcl"
   solver-version = 1
