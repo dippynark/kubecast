@@ -3,55 +3,93 @@
 package main
 
 import (
+	"crypto/sha1"
+	"encoding/base64"
+	"encoding/binary"
 	"flag"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 
+	"github.com/dippynark/kubepf/pkg/asciinema"
+	"github.com/dippynark/kubepf/pkg/kubepf"
 	"github.com/golang/glog"
+	"golang.org/x/net/websocket"
 )
 
 const (
-	sessionIDHTTPHeader = "X-Session-ID"
-	defaultAddress      = "0.0.0.0"
-	defaultPort         = 5050
+	defaultAddress = "0.0.0.0"
+	defaultPort    = 5050
 )
 
-func main() {
+func uploadHandler(ws *websocket.Conn) {
 
-	address := flag.String("address", defaultAddress, "address to serve on")
-	port := flag.Int("port", defaultPort, "port to serve on")
-	flag.Parse()
+	var files = make(map[string](*os.File))
 
-	http.HandleFunc("/upload", uploadHandler)
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", *address, *port), nil)
-	if err != nil {
-		glog.Errorf("Error starting server: %s", err)
+	for {
+
+		var ttyWrite kubepf.TtyWrite
+
+		err := binary.Read(ws, binary.BigEndian, &ttyWrite)
+		if err == io.EOF {
+			return
+		} else if err != nil {
+			glog.Fatalf("failed to read from websocket connection: %s", err)
+		} else {
+
+			//hash - hostname mount-namespace filesystem-identifier
+			hasher := sha1.New()
+			hasher.Write([]byte(fmt.Sprintf("%s%s", ttyWrite.Hostname, ttyWrite.Inode)))
+			sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+			filname := fmt.Sprintf("%s.cast", sha)
+
+			file, ok := files[sha]
+			if !ok {
+
+				if _, err = os.Stat(filname); os.IsNotExist(err) {
+
+					file, err = os.OpenFile(filname, os.O_CREATE|os.O_RDWR, 0775)
+					if err != nil {
+						glog.Fatalf("failed to open file %s: %s", filname, err)
+					}
+					defer file.Close()
+
+					err = asciinema.Init(&ttyWrite, file)
+					if err != nil {
+						glog.Fatalf("failed to initialise: %s", err)
+					}
+				} else if !os.IsNotExist(err) {
+
+					file, err = os.OpenFile(filname, os.O_APPEND|os.O_RDWR, 0775)
+					if err != nil {
+						glog.Fatalf("failed to open file %s: %s", filname, err)
+					}
+					defer file.Close()
+
+				}
+
+				files[sha] = file
+			}
+
+			err = asciinema.Append(&ttyWrite, file)
+			if err != nil {
+				glog.Fatalf("failed to write entry: %s", err)
+			}
+		}
 	}
 }
 
-func uploadHandler(w http.ResponseWriter, r *http.Request) {
+func main() {
 
-	sessionID := r.Header.Get(sessionIDHTTPHeader)
-	if sessionID == "" {
-		glog.Errorf("Request did not contain session ID HTTP header: %s", sessionIDHTTPHeader)
-		return
-	}
+	address := *flag.String("address", defaultAddress, "address to serve on")
+	port := *flag.Int("port", defaultPort, "port to serve on")
+	flag.Parse()
 
-	filename := fmt.Sprintf("session-%s", sessionID)
-
-	file, err := os.OpenFile(filename, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0660)
-	defer file.Close()
+	http.Handle("/upload", websocket.Handler(uploadHandler))
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 	if err != nil {
-		glog.Errorf("Failed to open file %s: %s", filename, err)
-		return
-	}
-	n, err := io.Copy(file, r.Body)
-	if err != nil {
-		glog.Errorf("Failed to copy body to file: %s", filename)
-		return
+		glog.Fatalf("ListenAndServe: %s", err)
 	}
 
-	glog.Info("%d bytes copied to %s", n, filename)
 }

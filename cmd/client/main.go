@@ -1,34 +1,40 @@
 package main
 
 import (
+	"encoding/binary"
 	"flag"
 	"fmt"
-	"os"
 
-	"github.com/dippynark/kubepf/pkg/asciinema"
 	"github.com/dippynark/kubepf/pkg/kubepf"
 	"github.com/golang/glog"
+	"golang.org/x/net/websocket"
 )
 
 const (
-	defaultServerAddress = "127.0.0.1"
+	defaultServerAddress = "localhost"
 	defaultPort          = 5050
 )
 
 func main() {
 
+	serverAddress := *flag.String("server", defaultServerAddress, "server address")
+	port := *flag.Int("port", defaultPort, "server port")
 	flag.Parse()
+
+	// connect to server
+	ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
+	if err != nil {
+		glog.Fatalf("failed to connect to server: %s", err)
+	}
 
 	channel := make(chan []byte)
 	lostChannel := make(chan uint64)
 
-	err := kubepf.New(channel, lostChannel)
+	err = kubepf.New(channel, lostChannel)
 	if err != nil {
 		glog.Fatalf("failed to load BPF module: %s", err)
 	}
 	glog.Info("loaded BPF program successfully")
-
-	files := make(map[uint64](*os.File))
 
 	for {
 		select {
@@ -37,26 +43,12 @@ func main() {
 			if !ok {
 				glog.Fatal("channel closed")
 			}
+
 			ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
 
-			file, ok := files[ttyWriteGo.Inode]
-			if !ok {
-				file, err = os.OpenFile(fmt.Sprintf("%d.json", ttyWriteGo.Inode), os.O_CREATE|os.O_APPEND|os.O_RDWR, 0775)
-				if err != nil {
-					glog.Fatalf("failed to open file %s", fmt.Sprintf("%d.json", ttyWriteGo.Inode))
-				}
-				files[ttyWriteGo.Inode] = file
-				defer file.Close()
-
-				err = asciinema.Init(&ttyWriteGo, file)
-				if err != nil {
-					glog.Fatalf("failed to initialise: %s", err)
-				}
-			}
-
-			err = asciinema.Append(&ttyWriteGo, file)
+			err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
 			if err != nil {
-				glog.Fatalf("failed to write entry: %s", err)
+				glog.Fatalf("failed to write to websocket connection: %s", err)
 			}
 
 		case lost, ok := <-lostChannel:

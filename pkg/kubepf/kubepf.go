@@ -4,8 +4,10 @@ import (
 	"bytes"
 	"unsafe"
 	"errors"
+	"os"
 
 	bpflib "github.com/iovisor/gobpf/elf"
+	"github.com/golang/glog"
 )
 
 /*
@@ -16,6 +18,7 @@ import "C"
 
 const (
 	bufferSize = 256
+	hostnameSize = 64
 )
 
 type TtyWrite struct {
@@ -23,6 +26,7 @@ type TtyWrite struct {
 	Buffer    [bufferSize]byte
 	Timestamp uint64
 	Inode uint64
+	Hostname [hostnameSize]byte
 }
 
 func New(channel chan []byte, lostChannel chan uint64) error {
@@ -80,6 +84,14 @@ func TtyWriteToGo(data *[]byte) (ret TtyWrite) {
 	ret.Buffer = *(*[C.BUFSIZE]byte)(unsafe.Pointer(&ttyWrite.buf))
 	ret.Timestamp = uint64(ttyWrite.timestamp)
 	ret.Inode = uint64(ttyWrite.ino)
+
+	hostname, err := os.Hostname()
+	if err != nil {
+		glog.Fatalf("failed to retreive hostname: %s", err)
+	}
+	var truncatedHostname [hostnameSize]byte
+	copy(truncatedHostname[:], hostname)
+	ret.Hostname = truncatedHostname
 
 	return
 }
