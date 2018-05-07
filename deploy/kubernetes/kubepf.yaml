@@ -1,0 +1,70 @@
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: kubepf-client
+spec:
+  selector:
+    matchLabels:
+      app: kubepf-client
+  template:
+    metadata:
+      labels:
+        app: kubepf-client
+    spec:
+      containers:
+      - name: kubepf
+        image: dippynark/kubepf-client
+        command:
+        - /usr/bin/client
+        - -server
+        - kubepf-server
+        securityContext:
+          privileged: true
+        volumeMounts:
+        - name: sys-kernel-debug
+          mountPath: /sys/kernel/debug
+      volumes:
+      - name: sys-kernel-debug
+        hostPath: 
+          path: /sys/kernel/debug
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubepf-server
+spec: 
+  selector:
+    app: kubepf-server
+  ports:
+  - name: kubepf
+    port: 5050
+  - name: web
+    port: 8000
+---
+apiVersion: apps/v1beta1
+kind: Deployment
+metadata:
+  name: kubepf-server
+spec:
+  selector:
+    matchLabels:
+      app: kubepf-server
+  template:
+    metadata:
+      labels:
+        app: kubepf-server
+    spec:
+      containers:
+      - name: kubepf
+        image: dippynark/kubepf-server
+        ports:
+        - containerPort: 5050
+      - name: python
+        image: frolvlad/alpine-python3
+        command:
+        - python
+        - -m
+        - http.server
+        - "8000"
+        ports:
+        - containerPort: 8000
