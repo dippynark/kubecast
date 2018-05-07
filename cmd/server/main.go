@@ -45,7 +45,7 @@ func main() {
 	}
 
 	http.Handle("/upload", websocket.Handler(uploadHandler))
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
+	err = http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 	if err != nil {
 		glog.Fatalf("ListenAndServe: %s", err)
 	}
@@ -71,7 +71,7 @@ func uploadHandler(ws *websocket.Conn) {
 			hasher := sha1.New()
 			hasher.Write([]byte(fmt.Sprintf("%s%s", ttyWrite.Hostname, ttyWrite.Inode)))
 			sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-			filename := fmt.Sprintf("%s/%s.cast", data, sha)
+			filename := fmt.Sprintf("%s/%s.cast", dataPath, sha)
 
 			file, ok := files[sha]
 			if !ok {
