@@ -59,14 +59,28 @@ spec:
       - name: kubepf
         image: dippynark/kubepf-server
         imagePullPolicy: Always
+        command:
+        - /usr/bin/server
+        - -data-path
+        - /data
         ports:
         - containerPort: 5050
+        volumeMounts:
+        - name: data-path
+          mountPath: /data
       - name: python
         image: frolvlad/alpine-python3
         command:
-        - python
-        - -m
-        - http.server
-        - "8000"
+        - /bin/sh
+        - -c
+        - |
+          cd /data
+          python -m http.server "8000"
         ports:
         - containerPort: 8000
+        volumeMounts:
+        - name: data-path
+          mountPath: /data
+    volumes:
+    - name: data-path
+      emptyDir: {}
