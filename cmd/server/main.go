@@ -28,13 +28,15 @@ var addressFlag = flag.String("address", defaultAddress, "address to serve on")
 var portFlag = flag.Int("port", defaultPort, "port to serve on")
 var dataPathFlag = flag.String("data-path", defaultDataPath, "directory to store data")
 
+var dataPath string
+
 func main() {
 
 	flag.Parse()
 
 	address := *addressFlag
 	port := *portFlag
-	dataPath := *dataPathFlag
+	dataPath = *dataPathFlag
 
 	stat, err := os.Stat(dataPath)
 	if err != nil {
