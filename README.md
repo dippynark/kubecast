@@ -1,16 +1,17 @@
 # kubepf
 
-Have you ever wanted to monitor shell activity on your cluster? When running a Kubernetes cluster, we can use [advanced auditing](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/) to log when a user uses `kubectl exec` to interact with cluster workloads, but we cannot see the actual commands that were run during a session. This inability reduces our ability to audit services effectively.
+The Kubernetes apiserver supports [auditing](https://kubernetes.io/docs/tasks/debug-application-cluster/audit/). Operators can use this feature to see whenever a client uses `kubectl exec` to gain access to a container. One issue with this is that operators cannot see what a client actually types during the session which reduces their ability to audit their effectively.
 
-kubepf is designed to fix this by logging container session activity and streaming the contents to a central database. The way kubepf works is by deploying a DaemonSet to install a set of eBPF programs and a collection Pod on each cluster node. These eBPF programs are inserted on particular instructions in the kernel and userspace and are triggered by certain events. These events allow us to collect interesting information such as function arguments. These arguments could include the text written to a tty or the name of an executed program. 
-
-Furthermore, the information collected from these events can be grouped per session. By passing this information to the collection Pods and then forwarding the data to a single sink, cluster administrators can get a detailed view of what interactive actions are occuring in real time.
+kubepf fills in this missing information and allows operators to see exactly what was typed during any shell session. kubepf does this by injecting a small eBPF program on every node which is triggered whenever a TTY is written to. These writes are then submitted to userspace, grouped into sessions and streamed to a central server in the [asciicast](https://github.com/asciinema/asciinema/blob/develop/doc/asciicast-v2.md) format so that they can be played back in real time.
 
 ## Warning 
 
-This project is strictly alpha. kubepf injects code that is run in kernel space. Although this code runs on an in-kernel VM and should be safe, there can be perfomance implications - use at your own risk!
+This project is strictly alpha and kubepf injects code that is run in kernel space. Although this code runs on an in-kernel VM and should be safe, there can be perfomance implications - use at your own risk!
 
 ## Quickstart 
+
+- gcloud container clusters create test --image-type UBUNTU
+- /usr/src/linux-gcp-headers-4.13.0-1008 and /usr/src/linux-headers-4.13.0-1008-gcp
 
 ### Prerequisites
 
@@ -19,7 +20,7 @@ This project is strictly alpha. kubepf injects code that is run in kernel space.
 ### Build
 
 ```
-make
+make all
 ```
 
 We can view the generated object file using `llvm-objdump`
