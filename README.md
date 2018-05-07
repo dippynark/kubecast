@@ -23,7 +23,7 @@ This project is strictly alpha and kubepf injects code that is run in kernel spa
 make all
 ```
 
-We can view the generated object file using `llvm-objdump`
+The generated object file can be viewed using `llvm-objdump`
 
 ```
 llvm-objdump -S ./bpf/bpf_tty.o
