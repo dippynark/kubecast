@@ -19,12 +19,14 @@ import (
 )
 
 const (
-	defaultAddress = "0.0.0.0"
-	defaultPort    = 5050
+	defaultAddress  = "0.0.0.0"
+	defaultPort     = 5050
+	defaultDataPath = "/tmp"
 )
 
 var addressFlag = flag.String("address", defaultAddress, "address to serve on")
 var portFlag = flag.Int("port", defaultPort, "port to serve on")
+var dataPathFlag = flag.String("data-path", defaultDataPath, "directory to store data")
 
 func main() {
 
@@ -32,6 +34,15 @@ func main() {
 
 	address := *addressFlag
 	port := *portFlag
+	dataPath := *dataPathFlag
+
+	stat, err := os.Stat(dataPath)
+	if err != nil {
+		glog.Fatalf("could not stat path %s: %s", dataPath, err)
+	}
+	if !stat.IsDir() {
+		glog.Fatalf("%s is not a directory", dataPath)
+	}
 
 	http.Handle("/upload", websocket.Handler(uploadHandler))
 	err := http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
@@ -60,7 +71,7 @@ func uploadHandler(ws *websocket.Conn) {
 			hasher := sha1.New()
 			hasher.Write([]byte(fmt.Sprintf("%s%s", ttyWrite.Hostname, ttyWrite.Inode)))
 			sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-			filename := fmt.Sprintf("%s.cast", sha)
+			filename := fmt.Sprintf("%s/%s.cast", data, sha)
 
 			file, ok := files[sha]
 			if !ok {
