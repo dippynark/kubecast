@@ -1,5 +1,6 @@
 SHELL=/bin/bash -o pipefail
-LINUX_HEADERS=$(shell uname -r | awk '{print "/usr/src/linux-headers-"$$1}')
+#LINUX_HEADERS=$(shell uname -r | awk '{print "/usr/src/linux-headers-"$$1}')
+LINUX_HEADERS=/usr/src/linux-gcp-headers-4.13.0-1008 /usr/src/linux-headers-4.13.0-1008-gcp
 DEST_DIR?=/dist
 
 BPF = bpf_tty.o
@@ -14,7 +15,7 @@ CLANG_FLAGS := -D__KERNEL__ -D__ASM_SYSREG_H \
 	-Wunused \
 	-Wall \
 	-O2 -emit-llvm \
-	$(foreach path,$(LINUX_HEADERS), -I $(path)/arch/x86/include -I $(path)/arch/x86/include/generated -I $(path)/include -I $(path)/include/generated/uapi -I $(path)/arch/x86/include/uapi -I $(path)/include/uapi)
+	$(foreach path,$(LINUX_HEADERS),-I $(path)/include -I $(path)/arch/x86/include -I $(path)/arch/x86/include/generated -I $(path)/include/generated/uapi -I $(path)/arch/x86/include/uapi -I $(path)/include/uapi)
 
 LLC ?= llc
 LLC_FLAGS := -march=bpf -filetype=obj

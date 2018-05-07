@@ -15,11 +15,15 @@ const (
 	defaultPort          = 5050
 )
 
+var serverAddressFlag = flag.String("server", defaultServerAddress, "server address")
+var portFlag = flag.Int("port", defaultPort, "server port")
+
 func main() {
 
-	serverAddress := *flag.String("server", defaultServerAddress, "server address")
-	port := *flag.Int("port", defaultPort, "server port")
 	flag.Parse()
+
+	serverAddress := *serverAddressFlag
+	port := *portFlag
 
 	// connect to server
 	ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))

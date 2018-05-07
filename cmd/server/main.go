@@ -23,6 +23,24 @@ const (
 	defaultPort    = 5050
 )
 
+var addressFlag = flag.String("address", defaultAddress, "address to serve on")
+var portFlag = flag.Int("port", defaultPort, "port to serve on")
+
+func main() {
+
+	flag.Parse()
+
+	address := *addressFlag
+	port := *portFlag
+
+	http.Handle("/upload", websocket.Handler(uploadHandler))
+	err := http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
+	if err != nil {
+		glog.Fatalf("ListenAndServe: %s", err)
+	}
+
+}
+
 func uploadHandler(ws *websocket.Conn) {
 
 	var files = make(map[string](*os.File))
@@ -42,16 +60,16 @@ func uploadHandler(ws *websocket.Conn) {
 			hasher := sha1.New()
 			hasher.Write([]byte(fmt.Sprintf("%s%s", ttyWrite.Hostname, ttyWrite.Inode)))
 			sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-			filname := fmt.Sprintf("%s.cast", sha)
+			filename := fmt.Sprintf("%s.cast", sha)
 
 			file, ok := files[sha]
 			if !ok {
 
-				if _, err = os.Stat(filname); os.IsNotExist(err) {
+				if _, err = os.Stat(filename); os.IsNotExist(err) {
 
-					file, err = os.OpenFile(filname, os.O_CREATE|os.O_RDWR, 0775)
+					file, err = os.OpenFile(filename, os.O_CREATE|os.O_RDWR, 0775)
 					if err != nil {
-						glog.Fatalf("failed to open file %s: %s", filname, err)
+						glog.Fatalf("failed to open file %s: %s", filename, err)
 					}
 					defer file.Close()
 
@@ -61,9 +79,9 @@ func uploadHandler(ws *websocket.Conn) {
 					}
 				} else if !os.IsNotExist(err) {
 
-					file, err = os.OpenFile(filname, os.O_APPEND|os.O_RDWR, 0775)
+					file, err = os.OpenFile(filename, os.O_APPEND|os.O_RDWR, 0775)
 					if err != nil {
-						glog.Fatalf("failed to open file %s: %s", filname, err)
+						glog.Fatalf("failed to open file %s: %s", filename, err)
 					}
 					defer file.Close()
 
@@ -78,18 +96,4 @@ func uploadHandler(ws *websocket.Conn) {
 			}
 		}
 	}
-}
-
-func main() {
-
-	address := *flag.String("address", defaultAddress, "address to serve on")
-	port := *flag.Int("port", defaultPort, "port to serve on")
-	flag.Parse()
-
-	http.Handle("/upload", websocket.Handler(uploadHandler))
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
-	if err != nil {
-		glog.Fatalf("ListenAndServe: %s", err)
-	}
-
 }

@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kubepf-client
+spec:
+  containers:
+  - name: kubepf
+    image: dippynark/kubepf-client
+    securityContext:
+      privileged: true

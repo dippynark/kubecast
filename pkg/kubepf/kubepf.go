@@ -5,6 +5,7 @@ import (
 	"unsafe"
 	"errors"
 	"os"
+	"fmt"
 
 	bpflib "github.com/iovisor/gobpf/elf"
 	"github.com/golang/glog"
@@ -46,7 +47,7 @@ func New(channel chan []byte, lostChannel chan uint64) error {
 	sectionParams["maps/tty_writes"] = bpflib.SectionParams{PerfRingBufferPageCount: bufferSize}
 	err = m.Load(sectionParams)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to load BPF program and maps: %s", err)
 	}
 
 	// enable kprobes/kretprobes.
@@ -56,12 +57,12 @@ func New(channel chan []byte, lostChannel chan uint64) error {
 	// For kprobes, maxactive is ignored.
 	err = m.EnableKprobes(0)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to enable kprobes: %s", err)
 	}
 
 	perfMap, err := bpflib.InitPerfMap(m, "tty_writes", channel, lostChannel)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to initialise perf map: %s", err)
 	}
 
 	perfMap.SetTimestampFunc(ttyWriteTimestamp)
