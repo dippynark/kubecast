@@ -60,7 +60,7 @@ func main() {
 func listHandler(ws *websocket.Conn) {
 
 	for {
-		err = binary.Write(ws, binary.BigEndian, 1)
+		err := binary.Write(ws, binary.BigEndian, 1)
 		if err == io.EOF {
 			return
 		} else if err != nil {
