@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/dippynark/kubepf/pkg/asciinema"
 	"github.com/dippynark/kubepf/pkg/kubepf"
@@ -46,10 +47,28 @@ func main() {
 		glog.Fatalf("%s is not a directory", dataPath)
 	}
 
+	http.Handle("/list", websocket.Handler(listHandler))
 	http.Handle("/upload", websocket.Handler(uploadHandler))
+
 	err = http.ListenAndServe(fmt.Sprintf("%s:%d", address, port), nil)
 	if err != nil {
 		glog.Fatalf("ListenAndServe: %s", err)
+	}
+
+}
+
+func listHandler(ws *websocket.Conn) {
+
+	for {
+		err = binary.Write(ws, binary.BigEndian, 1)
+		if err == io.EOF {
+			return
+		} else if err != nil {
+			glog.Fatalf("failed to read from websocket connection: %s", err)
+		} else {
+			time.Sleep(time.Second)
+
+		}
 	}
 
 }
