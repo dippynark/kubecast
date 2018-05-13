@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/dippynark/kubepf/pkg/asciinema"
@@ -58,17 +59,26 @@ func main() {
 }
 
 func listHandler(ws *websocket.Conn) {
-
+	glog.Errorf("Connection made")
 	for {
-		err := binary.Write(ws, binary.BigEndian, 1)
-		if err == io.EOF {
-			return
-		} else if err != nil {
-			glog.Fatalf("failed to read from websocket connection: %s", err)
-		} else {
-			time.Sleep(time.Second)
 
+		message := ""
+		files, err := filepath.Glob(dataPath + "/*.cast")
+		if err != nil {
+			glog.Fatalf("could not list files: %s", err)
 		}
+		for _, file := range files {
+			message += (file + "\n")
+		}
+
+		n, err := ws.Write([]byte(message))
+		if n != len(message) {
+			glog.Fatalf("could only write %d out of %d bytes", n, len(message))
+		}
+		if err != nil {
+			time.Sleep(time.Second)
+		}
+
 	}
 
 }
