@@ -59,7 +59,7 @@ func main() {
 }
 
 func listHandler(ws *websocket.Conn) {
-	glog.Errorf("Connection made")
+	glog.Errorf("list handler invoked")
 	for {
 
 		message := ""
@@ -86,7 +86,7 @@ func listHandler(ws *websocket.Conn) {
 }
 
 func uploadHandler(ws *websocket.Conn) {
-
+	glog.Errorf("upload handler invoked")
 	var files = make(map[string](*os.File))
 
 	for {
