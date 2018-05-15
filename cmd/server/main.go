@@ -73,12 +73,14 @@ func listHandler(ws *websocket.Conn) {
 
 		n, err := ws.Write([]byte(message))
 		if n != len(message) {
-			glog.Fatalf("could only write %d out of %d bytes", n, len(message))
+			glog.Errorf("could only write %d out of %d bytes", n, len(message))
+			return
 		}
 		if err != nil {
-			time.Sleep(time.Second)
+			glog.Errorf("failed to write message: %s", err)
+			return
 		}
-
+		time.Sleep(time.Second)
 	}
 
 }

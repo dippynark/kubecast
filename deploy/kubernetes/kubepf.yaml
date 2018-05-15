@@ -40,7 +40,7 @@ spec:
   - name: kubepf
     port: 5050
   - name: web
-    port: 8000
+    port: 80
 ---
 apiVersion: apps/v1beta1
 kind: Deployment
@@ -62,25 +62,20 @@ spec:
         command:
         - /usr/bin/server
         - -data-path
-        - /data
+        - /casts
         ports:
         - containerPort: 5050
         volumeMounts:
         - name: data-path
-          mountPath: /data
-      - name: python
-        image: frolvlad/alpine-python3
-        command:
-        - /bin/sh
-        - -c
-        - |
-          cd /data
-          python -m http.server "8000"
+          mountPath: /casts
+      - name: kubepf-ui
+        image: dippynark/kubepf-ui
+        imagePullPolicy: Always
         ports:
-        - containerPort: 8000
+        - containerPort: 80
         volumeMounts:
         - name: data-path
-          mountPath: /data
+          mountPath: /usr/share/nginx/html/casts
       volumes:
       - name: data-path
         emptyDir: {}

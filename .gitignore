@@ -2,5 +2,6 @@
 /client
 client_linux_amd64
 server_linux_amd64
+server_darwin_amd64
 bpf_tty.go
 bpf_tty.o
