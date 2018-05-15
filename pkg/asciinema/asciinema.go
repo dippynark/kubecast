@@ -7,7 +7,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dippynark/kubepf/pkg/kubepf"
+	"github.com/dippynark/kubepf/pkg/server"
 )
 
 type header struct {
@@ -17,7 +17,7 @@ type header struct {
 	Timestamp int64 `json:"timestamp"`
 }
 
-func Init(ttyWrite *kubepf.TtyWrite, file *os.File) error {
+func Init(ttyWrite *server.TtyWrite, file *os.File) error {
 	h := header{
 		Version:   2,
 		Width:     80,
@@ -41,7 +41,7 @@ func Init(ttyWrite *kubepf.TtyWrite, file *os.File) error {
 	return nil
 }
 
-func Append(ttyWrite *kubepf.TtyWrite, file *os.File) error {
+func Append(ttyWrite *server.TtyWrite, file *os.File) error {
 
 	file.Seek(0, 0)
 	scanner := bufio.NewScanner(file)

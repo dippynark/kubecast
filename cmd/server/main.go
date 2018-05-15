@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/dippynark/kubepf/pkg/asciinema"
-	"github.com/dippynark/kubepf/pkg/kubepf"
+	"github.com/dippynark/kubepf/pkg/server"
 	"github.com/golang/glog"
 	"golang.org/x/net/websocket"
 )
@@ -89,7 +89,7 @@ func uploadHandler(ws *websocket.Conn) {
 
 	for {
 
-		var ttyWrite kubepf.TtyWrite
+		var ttyWrite server.TtyWrite
 
 		err := binary.Read(ws, binary.BigEndian, &ttyWrite)
 		if err == io.EOF {

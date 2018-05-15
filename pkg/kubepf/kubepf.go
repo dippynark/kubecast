@@ -9,6 +9,7 @@ import (
 
 	bpflib "github.com/iovisor/gobpf/elf"
 	"github.com/golang/glog"
+	"github.com/dippynark/kubepf/pkg/server"
 )
 
 /*
@@ -16,19 +17,6 @@ import (
 #include "../../bpf/bpf_tty.h"
 */
 import "C"
-
-const (
-	bufferSize = 256
-	hostnameSize = 64
-)
-
-type TtyWrite struct {
-	Count     uint32
-	Buffer    [bufferSize]byte
-	Timestamp uint64
-	Inode uint64
-	Hostname [hostnameSize]byte
-}
 
 func New(channel chan []byte, lostChannel chan uint64) error {
 
@@ -44,7 +32,7 @@ func New(channel chan []byte, lostChannel chan uint64) error {
 	}
 
 	sectionParams := make(map[string]bpflib.SectionParams)
-	sectionParams["maps/tty_writes"] = bpflib.SectionParams{PerfRingBufferPageCount: bufferSize}
+	sectionParams["maps/tty_writes"] = bpflib.SectionParams{PerfRingBufferPageCount: server.BufferSize}
 	err = m.Load(sectionParams)
 	if err != nil {
 		return fmt.Errorf("failed to load BPF program and maps: %s", err)
@@ -77,7 +65,7 @@ func ttyWriteTimestamp(data *[]byte) uint64 {
 	return uint64(ttyWrite.timestamp)
 }
 
-func TtyWriteToGo(data *[]byte) (ret TtyWrite) {
+func TtyWriteToGo(data *[]byte) (ret server.TtyWrite) {
 
 	ttyWrite := (*C.struct_tty_write_t)(unsafe.Pointer(&(*data)[0]))
 
@@ -90,7 +78,7 @@ func TtyWriteToGo(data *[]byte) (ret TtyWrite) {
 	if err != nil {
 		glog.Fatalf("failed to retreive hostname: %s", err)
 	}
-	var truncatedHostname [hostnameSize]byte
+	var truncatedHostname [server.HostnameSize]byte
 	copy(truncatedHostname[:], hostname)
 	ret.Hostname = truncatedHostname
 
