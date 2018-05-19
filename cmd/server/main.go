@@ -48,6 +48,8 @@ func main() {
 		glog.Fatalf("%s is not a directory", dataPath)
 	}
 
+	http.HandleFunc("/", healthzHandler)
+	http.HandleFunc("/healthz", healthzHandler)
 	http.Handle("/list", websocket.Handler(listHandler))
 	http.Handle("/upload", websocket.Handler(uploadHandler))
 
@@ -56,6 +58,10 @@ func main() {
 		glog.Fatalf("ListenAndServe: %s", err)
 	}
 
+}
+
+func healthzHandler(rw http.ResponseWriter, r *http.Request) {
+	return
 }
 
 func listHandler(ws *websocket.Conn) {
