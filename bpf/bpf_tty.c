@@ -7,6 +7,8 @@
 #include <linux/version.h>
 #include <linux/bpf.h>
 #include <linux/fs.h>
+#include <linux/ns_common.h>
+#include <linux/mount.h>
 
 #include "bpf_helpers.h"
 #include "bpf_tty.h"
@@ -29,6 +31,11 @@ int kprobe__tty_write(struct pt_regs *ctx)
     struct file *file;
     struct tty_write_t tty_write = {};
 
+    struct task_struct *task;
+    struct nsproxy *nsproxy;
+    struct mnt_namespace *mnt_ns;
+    struct ns_common ns;
+
     // we use the following mapping of registers to arguments
     /*
     R0 – rax      return value from function
@@ -46,6 +53,13 @@ int kprobe__tty_write(struct pt_regs *ctx)
     file = (struct file *)ctx->di;
     bpf_probe_read(&f_inode, sizeof(f_inode), (void *)&file->f_inode);
     bpf_probe_read(&tty_ino, sizeof(tty_ino), (void *)&f_inode->i_ino);
+
+    // retrieve mount namespace inum
+    task = (struct task_struct *)bpf_get_current_task();
+    bpf_probe_read(&nsproxy, sizeof(nsproxy), (void *)&task->nsproxy)
+    bpf_probe_read(&mnt_ns, sizeof(mnt_ns), (void *)&nsproxy->mnt_ns)
+    bpf_probe_read(&ns_common, sizeof(ns_common), (void *)&mnt_mns->ns_common)
+    tty_write.mnt_ns_inum = ns_common.inum
 
     // bpf_probe_read() can only use a fixed size, so truncate to count in user space:
     bpf_probe_read(&tty_write.buf, BUFSIZE, (void *)ctx->si);
