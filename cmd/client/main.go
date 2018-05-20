@@ -73,16 +73,16 @@ func main() {
 				}
 
 				ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
-				labels, ok := mountNamespaceToContainerLabels[ttyWriteGo.MountNamespaceInum]
+				containerLabels, ok := mountNamespaceToContainerLabels[ttyWriteGo.MountNamespaceInum]
 				if !ok {
 					mountNamespaceToContainerLabels := refresh(cli)
-					labels, ok = mountNamespaceToContainerLabels[ttyWriteGo.MountNamespaceInum]
+					containerLabels, ok = mountNamespaceToContainerLabels[ttyWriteGo.MountNamespaceInum]
 				}
 
-				copy(ttyWriteGo.ContainerName[:], ttyWriteGo[kubernetesContainerNameKey])
-				copy(ttyWriteGo.PodName[:], ttyWriteGo[kubernetesPodNameKey])
-				copy(ttyWriteGo.PodNamespaceKey[:], ttyWriteGo[kubernetesPodNamespaceKey])
-				copy(ttyWriteGo.PodUIDKey[:], ttyWriteGo[kubernetesPodUIDKey])
+				copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
+				copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
+				copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
+				copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
 
 				err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
 				if err != nil {
@@ -119,15 +119,15 @@ func refresh(cli *client.Client) map[uint64](map[string]string) {
 		}
 
 		pid := 0
-		if _, ok := ContainerJSON.ContainerJSONBase; ok != nil {
-			if _, ok = ContainerJSON.ContainerJSONBase.State; ok != nil {
+		if ContainerJSON.ContainerJSONBase != nil {
+			if ContainerJSON.ContainerJSONBase.State != nil {
 				pid = ContainerJSON.ContainerJSONBase.State.Pid
 			}
 		}
 
 		if pid != 0 {
 
-			mountNamespaceFile, err = filepath.EvalSymlinks(fmt.Sprintf("/proc/%d/ns/mnt", pid))
+			mountNamespaceFile, err := filepath.EvalSymlinks(fmt.Sprintf("/proc/%d/ns/mnt", pid))
 			if err != nil {
 				glog.Errorf("failed to retrieve namespace for PID %d: %s", pid, err)
 				continue
