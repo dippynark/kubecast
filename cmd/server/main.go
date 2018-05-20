@@ -115,7 +115,8 @@ func uploadHandler(ws *websocket.Conn) {
 
 			filename := ""
 			for _, attribute := range []string{fmt.Sprintf("%s", ttyWrite.PodNamespace), fmt.Sprintf("%s", ttyWrite.PodName), fmt.Sprintf("%s", ttyWrite.ContainerName)} {
-				if len(attribute) > 10 {
+				attribute = strings.Replace(attribute, string(0), "", -1)
+				if len(attribute) > 0 {
 					filename = fmt.Sprintf("%s-", attribute)
 				}
 			}
