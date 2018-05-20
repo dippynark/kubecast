@@ -115,7 +115,7 @@ func uploadHandler(ws *websocket.Conn) {
 			hash := hash(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum))
 
 			filename := ""
-			regex := "[^a-zA-Z0-9]+"
+			regex := "[^a-zA-Z0-9-]+"
 			reg, err := regexp.Compile(regex)
 			if err != nil {
 				glog.Fatalf("failed to compile regular expression %s: %s", regex, err)
