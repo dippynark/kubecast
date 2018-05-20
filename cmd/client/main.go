@@ -60,7 +60,7 @@ func main() {
 				if err != nil {
 					glog.Errorf("failed to write to websocket connection: %s", err)
 					ws.Close()
-					break L
+					goto L
 				}
 
 			case lost, ok := <-lostChannel:
