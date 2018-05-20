@@ -13,7 +13,7 @@ spec:
     spec:
       containers:
       - name: kubepf
-        image: dippynark/kubepf-client
+        image: dippynark/kubepf-client:linux-headers-4.13.0-1008-gcp
         imagePullPolicy: Always
         command:
         - /usr/bin/client
@@ -34,6 +34,7 @@ kind: Service
 metadata:
   name: kubepf-server
 spec: 
+  type: LoadBalancer
   selector:
     app: kubepf-server
   ports:
@@ -57,7 +58,7 @@ spec:
     spec:
       containers:
       - name: kubepf
-        image: dippynark/kubepf-server
+        image: dippynark/kubepf-server:linux-headers-4.13.0-1008-gcp
         imagePullPolicy: Always
         command:
         - /usr/bin/server
@@ -65,6 +66,10 @@ spec:
         - /casts
         ports:
         - containerPort: 5050
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 5050
         volumeMounts:
         - name: data-path
           mountPath: /casts
@@ -73,9 +78,32 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 80
+        readinessProbe:
+          httpGet:
+            path: /
+            port: 80
         volumeMounts:
         - name: data-path
           mountPath: /usr/share/nginx/html/casts
       volumes:
       - name: data-path
         emptyDir: {}
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kubepf
+spec:  
+  rules:
+  - host: cast.lukeaddison.co.uk
+    http:
+      paths:
+      - path: /list
+        backend:
+          serviceName: kubepf-server
+          servicePort: 5050
+      - path: /*
+        backend:
+          serviceName: kubepf-server
+          servicePort: 80
+  
