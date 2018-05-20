@@ -73,6 +73,7 @@ func TtyWriteToGo(data *[]byte) (ret server.TtyWrite) {
 	ret.Buffer = *(*[C.BUFSIZE]byte)(unsafe.Pointer(&ttyWrite.buf))
 	ret.Timestamp = uint64(ttyWrite.timestamp)
 	ret.Inode = uint64(ttyWrite.ino)
+	ret.MountNamespaceInum = uint64(ttyWrite.mnt_ns_inum)
 
 	hostname, err := os.Hostname()
 	if err != nil {
