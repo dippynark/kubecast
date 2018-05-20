@@ -11,10 +11,14 @@ spec:
       labels:
         app: kubepf-client
     spec:
+      hostPID: true
       containers:
       - name: kubepf
         image: dippynark/kubepf-client:linux-headers-4.13.0-1008-gcp
         imagePullPolicy: Always
+        env:
+        - name: "DOCKER_API_VERSION"
+          value: "1.24"
         command:
         - /usr/bin/client
         - -server
