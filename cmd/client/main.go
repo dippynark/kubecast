@@ -1,16 +1,18 @@
 package main
 
 import (
+	"context"
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"time"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/dippynark/kubepf/pkg/kubepf"
-	"github.com/golang/glog"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
+	"github.com/golang/glog"
 	"golang.org/x/net/websocket"
 )
 
@@ -18,10 +20,10 @@ const (
 	defaultServerAddress = "localhost"
 	defaultPort          = 5050
 
-	kubernetesPodNameKey = "io.kubernetes.pod.name"
-	kubernetesPodNamespaceKey = "io.kubernetes.pod.namespace"
+	kubernetesPodNameKey       = "io.kubernetes.pod.name"
+	kubernetesPodNamespaceKey  = "io.kubernetes.pod.namespace"
 	kubernetesContainerNameKey = "io.kubernetes.container.name"
-	kubernetesPodUIDKey = "io.kubernetes.pod.uid"
+	kubernetesPodUIDKey        = "io.kubernetes.pod.uid"
 )
 
 var serverAddressFlag = flag.String("server", defaultServerAddress, "server address")
@@ -102,7 +104,7 @@ func main() {
 func refresh(cli *client.Client) map[uint64](map[string]string) {
 
 	mountNamespaceToContainerLabels := make(map[uint64](map[string]string))
-	
+
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
 		panic(err)
@@ -110,16 +112,16 @@ func refresh(cli *client.Client) map[uint64](map[string]string) {
 
 	for _, container := range containers {
 		//fmt.Printf("%s %s\n", container.ID[:10], container.)
-		json, err = cli.ContainerInspect(context.Background(), container.ID)
+		ContainerJSON, err := cli.ContainerInspect(context.Background(), container.ID)
 		if err != nil {
 			glog.Errorf("failed to inspect container with ID %s: %s", container.ID, err)
 			continue
 		}
-		
+
 		pid := 0
-		if _, ok := json.ContainerJSONBase; ok != nil {
-			if _,ok = json.ContainerJSONBase.State; ok != nil {
-				pid = json.ContainerJSONBase.State.Pid
+		if _, ok := ContainerJSON.ContainerJSONBase; ok != nil {
+			if _, ok = ContainerJSON.ContainerJSONBase.State; ok != nil {
+				pid = ContainerJSON.ContainerJSONBase.State.Pid
 			}
 		}
 
@@ -134,7 +136,7 @@ func refresh(cli *client.Client) map[uint64](map[string]string) {
 			mountNamespace := strings.Split(strings.Split(mountNamespaceFile, "[")[1], "]")[0]
 			mountNamespaceToContainerLabels[uint64(mountNamespace)] = container.Config.Labels
 
-		}		
+		}
 	}
 
 	return mountNamespaceToContainerLabels
