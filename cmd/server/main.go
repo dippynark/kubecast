@@ -120,6 +120,9 @@ func uploadHandler(ws *websocket.Conn) {
 					filename = fmt.Sprintf("%s-", attribute)
 				}
 			}
+			if len(filename) == 0 {
+				filename = fmt.Sprintf("%s", ttyWrite.Hostname)
+			}
 
 			filename = fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s%d", filename, hash), string(0), "", -1))
 			if filename[0:1] == "/" {
