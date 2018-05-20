@@ -113,7 +113,14 @@ func uploadHandler(ws *websocket.Conn) {
 			//hash = hostname mount-namespace inode filesystem-identifier
 			hash := hash(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum))
 
-			filename := fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s-%s-%s-%d", ttyWrite.PodNamespace, ttyWrite.PodName, ttyWrite.ContainerName, hash), string(0), "", -1))
+			filename := ""
+			for _, attribute := range []string{fmt.Sprintf("%s", ttyWrite.PodNamespace), fmt.Sprintf("%s", ttyWrite.PodName), fmt.Sprintf("%s", ttyWrite.ContainerName)} {
+				if len(attribute) > 0 {
+					filename = fmt.Sprintf("%s-", attribute)
+				}
+			}
+
+			filename = fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s%d", filename, hash), string(0), "", -1))
 			if filename[0:1] == "/" {
 				if len(filename) > linuxFilenameSizeLimit {
 					filename = filename[0:linuxFilenameSizeLimit]
@@ -128,7 +135,6 @@ func uploadHandler(ws *websocket.Conn) {
 				}
 			}
 
-			//file, ok := files[sha]
 			file, ok := files[filename]
 			if !ok {
 
@@ -156,7 +162,6 @@ func uploadHandler(ws *websocket.Conn) {
 
 				}
 
-				//files[sha] = file
 				files[filename] = file
 			}
 
