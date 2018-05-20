@@ -101,7 +101,7 @@ func main() {
 	}
 }
 
-func refresh(cli *client.Client) map[uint64](map[string]string) {
+func refresh(cli *client.Client) map[string](map[string]string) {
 
 	mountNamespaceToContainerLabels := make(map[string](map[string]string))
 
