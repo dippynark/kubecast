@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	"github.com/dippynark/kubepf/pkg/asciinema"
@@ -112,7 +113,7 @@ func uploadHandler(ws *websocket.Conn) {
 			//hasher.Write([]byte(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)))
 			//sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 			//filename := fmt.Sprintf("%s/%s.cast", dataPath, sha)
-			filename := fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)
+			filename := fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s-%d-%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum), "\x00", "", -1))
 
 			//file, ok := files[sha]
 			file, ok := files[filename]
