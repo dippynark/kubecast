@@ -10,7 +10,7 @@ import (
 
 	"github.com/dippynark/kubepf/pkg/kubepf"
 	"github.com/golang/glog"
-	"github.com/moby/moby/client"
+	"github.com/docker/docker/client"
 	"golang.org/x/net/websocket"
 )
 
