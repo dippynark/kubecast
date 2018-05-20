@@ -45,7 +45,7 @@ func Append(ttyWrite *server.TtyWrite, file *os.File, timestamp int64) error {
 	var entry []interface{}
 	entry = append(entry, ((float64(ttyWrite.Timestamp))/1000000000)-(float64(timestamp)))
 	entry = append(entry, "o")
-	entry = append(entry, strings.Replace(string(ttyWrite.Buffer[0:ttyWrite.Count]), "\n", "\r\n", -1))
+	entry = append(entry, strings.Replace(strings.Replace(string(ttyWrite.Buffer[0:ttyWrite.Count]), "\n", "\r\n", -1), "\u000e", "\u0000", -1))
 
 	b, err := json.Marshal(entry)
 	if err != nil {
