@@ -59,7 +59,7 @@ int kprobe__tty_write(struct pt_regs *ctx)
     bpf_probe_read(&nsproxy, sizeof(nsproxy), (void *)&task->nsproxy);
     bpf_probe_read(&mnt_ns, sizeof(mnt_ns), (void *)&nsproxy->mnt_ns);
     bpf_probe_read(&ns, sizeof(ns), (void *)&mnt_mns->ns);
-    tty_write.mnt_ns_inum = ns_common.inum;
+    tty_write.mnt_ns_inum = ns.inum;
 
     // bpf_probe_read() can only use a fixed size, so truncate to count in user space:
     bpf_probe_read(&tty_write.buf, BUFSIZE, (void *)ctx->si);
