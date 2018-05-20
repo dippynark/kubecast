@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"path/filepath"
+	"os"
 	"strings"
 	"time"
 
@@ -127,7 +127,7 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 
 		if pid != 0 {
 
-			mountNamespaceFile, err := filepath.EvalSymlinks(fmt.Sprintf("/proc/%d/ns/mnt", pid))
+			mountNamespaceFile, err := os.Readlink(fmt.Sprintf("/proc/%d/ns/mnt", pid))
 			if err != nil {
 				glog.Errorf("failed to retrieve namespace for PID %d: %s", pid, err)
 				continue
