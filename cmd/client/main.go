@@ -44,7 +44,7 @@ func main() {
 			time.Sleep(1)
 			continue
 		}
-
+	L:
 		for {
 
 			select {
@@ -60,7 +60,7 @@ func main() {
 				if err != nil {
 					glog.Errorf("failed to write to websocket connection: %s", err)
 					ws.Close()
-					break
+					break L
 				}
 
 			case lost, ok := <-lostChannel:
