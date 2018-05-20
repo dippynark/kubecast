@@ -1,0 +1,2 @@
+var _dippynark$elm$Vacuum_Models$NotFoundRoute = {ctor: 'NotFoundRoute'};
+var _dippynark$elm$Vacuum_Models$HomeRoute = {ctor: 'HomeRoute'};

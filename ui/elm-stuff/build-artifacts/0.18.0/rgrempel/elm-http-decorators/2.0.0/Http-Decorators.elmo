@@ -1,0 +1,88 @@
+var _rgrempel$elm_http_decorators$Http_Decorators$cacheBusterUrl = function (url) {
+	var urlWithQueryIndicator = A2(_elm_lang$core$String$contains, '?', url) ? url : A2(_elm_lang$core$Basics_ops['++'], url, '?');
+	var urlWithParamSeparator = A2(_elm_lang$core$String$endsWith, '?', urlWithQueryIndicator) ? urlWithQueryIndicator : A2(_elm_lang$core$Basics_ops['++'], urlWithQueryIndicator, '&');
+	var urlWithTime = function (time) {
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			urlWithParamSeparator,
+			A2(
+				_elm_lang$core$Basics_ops['++'],
+				'cacheBuster=',
+				_elm_lang$core$Basics$toString(time)));
+	};
+	return A2(_elm_lang$core$Task$map, urlWithTime, _elm_lang$core$Time$now);
+};
+var _rgrempel$elm_http_decorators$Http_Decorators$addCacheBuster = function (req) {
+	return A2(
+		_elm_lang$core$Task$map,
+		function (s) {
+			return _elm_lang$core$Native_Utils.update(
+				req,
+				{url: s});
+		},
+		_rgrempel$elm_http_decorators$Http_Decorators$cacheBusterUrl(req.url));
+};
+var _rgrempel$elm_http_decorators$Http_Decorators$toRequest = _elm_lang$http$Http$request;
+var _rgrempel$elm_http_decorators$Http_Decorators$sendRaw = F2(
+	function (tagger, req) {
+		return A2(
+			_elm_lang$http$Http$send,
+			tagger,
+			_rgrempel$elm_http_decorators$Http_Decorators$toRequest(req));
+	});
+var _rgrempel$elm_http_decorators$Http_Decorators$toTaskRaw = function (_p0) {
+	return _elm_lang$http$Http$toTask(
+		_rgrempel$elm_http_decorators$Http_Decorators$toRequest(_p0));
+};
+var _rgrempel$elm_http_decorators$Http_Decorators$taskWithCacheBuster = function (req) {
+	return A2(
+		_elm_lang$core$Task$andThen,
+		_rgrempel$elm_http_decorators$Http_Decorators$toTaskRaw,
+		_rgrempel$elm_http_decorators$Http_Decorators$addCacheBuster(req));
+};
+var _rgrempel$elm_http_decorators$Http_Decorators$sendWithCacheBuster = F2(
+	function (tagger, req) {
+		return A2(
+			_elm_lang$core$Task$attempt,
+			tagger,
+			_rgrempel$elm_http_decorators$Http_Decorators$taskWithCacheBuster(req));
+	});
+var _rgrempel$elm_http_decorators$Http_Decorators$defaultPost = F3(
+	function (url, body, decoder) {
+		return {
+			method: 'POST',
+			headers: {ctor: '[]'},
+			url: url,
+			body: body,
+			expect: _elm_lang$http$Http$expectJson(decoder),
+			timeout: _elm_lang$core$Maybe$Nothing,
+			withCredentials: false
+		};
+	});
+var _rgrempel$elm_http_decorators$Http_Decorators$defaultGet = F2(
+	function (url, decoder) {
+		return {
+			method: 'GET',
+			headers: {ctor: '[]'},
+			url: url,
+			body: _elm_lang$http$Http$emptyBody,
+			expect: _elm_lang$http$Http$expectJson(decoder),
+			timeout: _elm_lang$core$Maybe$Nothing,
+			withCredentials: false
+		};
+	});
+var _rgrempel$elm_http_decorators$Http_Decorators$defaultGetString = function (url) {
+	return {
+		method: 'GET',
+		headers: {ctor: '[]'},
+		url: url,
+		body: _elm_lang$http$Http$emptyBody,
+		expect: _elm_lang$http$Http$expectString,
+		timeout: _elm_lang$core$Maybe$Nothing,
+		withCredentials: false
+	};
+};
+var _rgrempel$elm_http_decorators$Http_Decorators$RawRequest = F7(
+	function (a, b, c, d, e, f, g) {
+		return {method: a, headers: b, url: c, body: d, expect: e, timeout: f, withCredentials: g};
+	});

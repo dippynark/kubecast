@@ -1,0 +1,9 @@
+var _dippynark$elm$Cast_Msgs$OnLocationChange = function (a) {
+	return {ctor: 'OnLocationChange', _0: a};
+};
+var _dippynark$elm$Cast_Msgs$ListCasts = function (a) {
+	return {ctor: 'ListCasts', _0: a};
+};
+var _dippynark$elm$Cast_Msgs$DisplayCast = function (a) {
+	return {ctor: 'DisplayCast', _0: a};
+};

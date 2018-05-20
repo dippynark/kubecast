@@ -1,0 +1,5 @@
+var _dippynark$elm$Cast_Ports$displayCast = _elm_lang$core$Native_Platform.outgoingPort(
+	'displayCast',
+	function (v) {
+		return v;
+	});

@@ -1,0 +1,63 @@
+[
+  {
+    "name": "Navigation",
+    "comment": " This is a library for managing browser navigation yourself.\n\nThe core functionality is the ability to &ldquo;navigate&rdquo; to new URLs,\nchanging the address bar of the browser *without* the browser kicking off a\nrequest to your servers. Instead, you manage the changes yourself in Elm.\n\n\n# Change the URL\n@docs newUrl, modifyUrl\n\n# Navigation\n@docs back, forward\n\n# Force Page Loads\n@docs load, reload, reloadAndSkipCache\n\n# Programs with Locations\n@docs program, programWithFlags, Location\n\n",
+    "aliases": [
+      {
+        "name": "Location",
+        "comment": " A bunch of information about the address bar.\n\n**Note 1:** Almost everyone will want to use a URL parsing library like\n[`evancz/url-parser`][parse] to turn a `Location` into something more useful\nin your `update` function.\n\n[parse]: https://github.com/evancz/url-parser\n\n**Note 2:** These fields correspond exactly with the fields of `document.location`\nas described [here](https://developer.mozilla.org/en-US/docs/Web/API/Location).\n",
+        "args": [],
+        "type": "{ href : String , host : String , hostname : String , protocol : String , origin : String , port_ : String , pathname : String , search : String , hash : String , username : String , password : String }"
+      }
+    ],
+    "types": [],
+    "values": [
+      {
+        "name": "back",
+        "comment": " Go back some number of pages. So `back 1` goes back one page, and `back 2`\ngoes back two pages.\n\n**Note:** You only manage the browser history that *you* created. Think of this\nlibrary as letting you have access to a small part of the overall history. So\nif you go back farther than the history you own, you will just go back to some\nother website!\n",
+        "type": "Int -> Platform.Cmd.Cmd msg"
+      },
+      {
+        "name": "forward",
+        "comment": " Go forward some number of pages. So `forward 1` goes forward one page, and\n`forward 2` goes forward two pages. If there are no more pages in the future,\nthis will do nothing.\n\n**Note:** You only manage the browser history that *you* created. Think of this\nlibrary as letting you have access to a small part of the overall history. So\nif you go forward farther than the history you own, the user will end up on\nwhatever website they visited next!\n",
+        "type": "Int -> Platform.Cmd.Cmd msg"
+      },
+      {
+        "name": "load",
+        "comment": " Leave the current page and load the given URL. **This always results in a\npage load**, even if the provided URL is the same as the current one.\n\n    load \"http://elm-lang.org\"\n\nUse [`newUrl`](#newUrl) and [`modifyUrl`](#modifyUrl) if you want to change\nthe URL without a page load.\n",
+        "type": "String -> Platform.Cmd.Cmd msg"
+      },
+      {
+        "name": "modifyUrl",
+        "comment": " Modify the current URL. This *will not* add a new entry to the browser\nhistory. It just changes the one you are on right now.\n",
+        "type": "String -> Platform.Cmd.Cmd msg"
+      },
+      {
+        "name": "newUrl",
+        "comment": " Step to a new URL. This will add a new entry to the browser history.\n\n**Note:** If the user has gone `back` a few pages, there will be &ldquo;future\npages&rdquo; that the user can go `forward` to. Adding a new URL in that\nscenario will clear out any future pages. It is like going back in time and\nmaking a different choice.\n",
+        "type": "String -> Platform.Cmd.Cmd msg"
+      },
+      {
+        "name": "program",
+        "comment": " Same as [`Html.program`][doc], but your `update` function gets messages\nwhenever the URL changes.\n\n[doc]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html#program\n\nThe first difference is the `Location -> msg` argument. This converts a\n[`Location`](#location) into a message whenever the URL changes. That message\nis fed into your `update` function just like any other one.\n\nThe second difference is that the `init` function takes `Location` as an\nargument. This lets you use the URL on the first frame.\n\n**Note:** A location message is produced every time the URL changes. This\nincludes things exposed by this library, like `back` and `newUrl`, as well as\nwhenever the user clicks the back or forward buttons of the browsers. So if\nthe URL changes, you will hear about it in your `update` function.\n",
+        "type": "(Navigation.Location -> msg) -> { init : Navigation.Location -> ( model, Platform.Cmd.Cmd msg ) , update : msg -> model -> ( model, Platform.Cmd.Cmd msg ) , view : model -> Html.Html msg , subscriptions : model -> Platform.Sub.Sub msg } -> Platform.Program Basics.Never model msg"
+      },
+      {
+        "name": "programWithFlags",
+        "comment": " Works the same as [`program`](#program), but it can also handle flags.\nSee [`Html.programWithFlags`][doc] for more information.\n\n[doc]: http://package.elm-lang.org/packages/elm-lang/html/latest/Html#programWithFlags\n",
+        "type": "(Navigation.Location -> msg) -> { init : flags -> Navigation.Location -> ( model, Platform.Cmd.Cmd msg ) , update : msg -> model -> ( model, Platform.Cmd.Cmd msg ) , view : model -> Html.Html msg , subscriptions : model -> Platform.Sub.Sub msg } -> Platform.Program flags model msg"
+      },
+      {
+        "name": "reload",
+        "comment": " Reload the current page. **This always results in a page load!**\nThis may grab resources from the browser cache, so use\n[`reloadAndSkipCache`](reloadAndSkipCache) if you want to be sure\nthat you are not loading any cached resources.\n",
+        "type": "Platform.Cmd.Cmd msg"
+      },
+      {
+        "name": "reloadAndSkipCache",
+        "comment": " Reload the current page without using the browser cache. **This always\nresults in a page load!** It is more common to want [`reload`](reload).\n",
+        "type": "Platform.Cmd.Cmd msg"
+      }
+    ],
+    "generated-with-elm-version": "0.18.0"
+  }
+]

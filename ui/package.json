@@ -1,0 +1,10 @@
+{
+    "dependencies": {},
+    "devDependencies": {
+        "gulp": "^3.9.0",
+        "gulp-connect": "^4.0.0",
+        "gulp-elm": "^0.6.1",
+        "gulp-plumber": "^1.1.0",
+        "gulp-util": "^3.0.7"
+    }
+}

@@ -1,0 +1,47 @@
+var _dippynark$elm$Main$webSocketUrl = F2(
+	function (location, path) {
+		var _p0 = {ctor: '_Tuple2', _0: location.protocol, _1: location.host};
+		_v0_3:
+		do {
+			if (_p0.ctor === '_Tuple2') {
+				switch (_p0._1) {
+					case 'localhost:3000':
+						return A2(_elm_lang$core$Basics_ops['++'], 'ws://localhost:5050', path);
+					case '127.0.0.1:3000':
+						return A2(_elm_lang$core$Basics_ops['++'], 'ws://127.0.0.1:5050', path);
+					default:
+						if (_p0._0 === 'https:') {
+							return A2(
+								_elm_lang$core$Basics_ops['++'],
+								'wss://',
+								A2(_elm_lang$core$Basics_ops['++'], location.host, path));
+						} else {
+							break _v0_3;
+						}
+				}
+			} else {
+				break _v0_3;
+			}
+		} while(false);
+		return A2(
+			_elm_lang$core$Basics_ops['++'],
+			'ws://',
+			A2(_elm_lang$core$Basics_ops['++'], location.host, path));
+	});
+var _dippynark$elm$Main$subscriptions = function (model) {
+	return A2(
+		_elm_lang$websocket$WebSocket$listen,
+		A2(_dippynark$elm$Main$webSocketUrl, model.location, '/list'),
+		_dippynark$elm$Cast_Msgs$ListCasts);
+};
+var _dippynark$elm$Main$init = function (location) {
+	return {
+		ctor: '_Tuple2',
+		_0: _dippynark$elm$Cast_Models$initialModel(location),
+		_1: _elm_lang$core$Platform_Cmd$none
+	};
+};
+var _dippynark$elm$Main$main = A2(
+	_elm_lang$navigation$Navigation$program,
+	_dippynark$elm$Cast_Msgs$OnLocationChange,
+	{init: _dippynark$elm$Main$init, update: _dippynark$elm$Cast_Update$update, subscriptions: _dippynark$elm$Main$subscriptions, view: _dippynark$elm$Cast_View$view})();

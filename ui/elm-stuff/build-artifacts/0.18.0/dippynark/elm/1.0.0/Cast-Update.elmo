@@ -1,0 +1,64 @@
+var _dippynark$elm$Cast_Update$displayCast = _elm_lang$core$Native_Platform.outgoingPort(
+	'displayCast',
+	function (v) {
+		return v;
+	});
+var _dippynark$elm$Cast_Update$setCastIfEmpty = F2(
+	function (currentCast, newCasts) {
+		if (_elm_lang$core$Native_Utils.eq(currentCast, '')) {
+			var _p0 = A2(
+				_elm_lang$core$Array$get,
+				0,
+				_elm_lang$core$Array$fromList(newCasts));
+			if (_p0.ctor === 'Just') {
+				var _p1 = _p0._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _p1,
+					_1: _dippynark$elm$Cast_Update$displayCast(_p1)
+				};
+			} else {
+				return {ctor: '_Tuple2', _0: '', _1: _elm_lang$core$Platform_Cmd$none};
+			}
+		} else {
+			return {ctor: '_Tuple2', _0: currentCast, _1: _elm_lang$core$Platform_Cmd$none};
+		}
+	});
+var _dippynark$elm$Cast_Update$update = F2(
+	function (msg, model) {
+		var _p2 = msg;
+		switch (_p2.ctor) {
+			case 'DisplayCast':
+				var _p3 = _p2._0;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{cast: _p3}),
+					_1: _dippynark$elm$Cast_Update$displayCast(_p3)
+				};
+			case 'ListCasts':
+				var casts = A2(
+					_elm_lang$core$String$split,
+					'\n',
+					_elm_lang$core$String$trim(_p2._0));
+				var _p4 = A2(_dippynark$elm$Cast_Update$setCastIfEmpty, model.cast, casts);
+				var cast = _p4._0;
+				var command = _p4._1;
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{cast: cast, casts: casts}),
+					_1: command
+				};
+			default:
+				return {
+					ctor: '_Tuple2',
+					_0: _elm_lang$core$Native_Utils.update(
+						model,
+						{location: _p2._0}),
+					_1: _elm_lang$core$Platform_Cmd$none
+				};
+		}
+	});

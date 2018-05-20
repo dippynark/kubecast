@@ -1,0 +1,13 @@
+var _dippynark$elm$Cast_Models$initialModel = function (location) {
+	return {
+		cast: '',
+		casts: {ctor: '[]'},
+		location: location
+	};
+};
+var _dippynark$elm$Cast_Models$Model = F3(
+	function (a, b, c) {
+		return {cast: a, casts: b, location: c};
+	});
+var _dippynark$elm$Cast_Models$NotFoundRoute = {ctor: 'NotFoundRoute'};
+var _dippynark$elm$Cast_Models$HomeRoute = {ctor: 'HomeRoute'};

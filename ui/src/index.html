@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Asciinema Player</title>
+        <script src="Main.js"></script>
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+        <link rel="stylesheet" href="styles.css">
+        <link rel="stylesheet" type="text/css" href="asciinema-player.css" />
+    </head>
+    
+    <body>
+    </body>
+
+    <script src="asciinema-player.js"></script>
+    
+    <script>
+        var app = Elm.Main.fullscreen();
+
+        app.ports.displayCast.subscribe(function(word) {
+            document.getElementById("asciinema-player-container").innerHTML = "<asciinema-player src=" + word + "></asciinema-player>";
+        });
+    </script>
+
+</html>
