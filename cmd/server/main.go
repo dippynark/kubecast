@@ -123,19 +123,19 @@ func uploadHandler(ws *websocket.Conn) {
 			for _, attribute := range []string{fmt.Sprintf("%s", ttyWrite.PodNamespace), fmt.Sprintf("%s", ttyWrite.PodName), fmt.Sprintf("%s", ttyWrite.ContainerName)} {
 				attribute = reg.ReplaceAllString(attribute, "")
 				if len(attribute) > 0 {
-					filename = fmt.Sprintf("%s%s-", filename, attribute)
+					filename = fmt.Sprintf("%s%s.", filename, attribute)
 				}
 			}
 			if len(filename) == 0 {
 				hostname := fmt.Sprintf("%s", ttyWrite.Hostname)
 				hostname = reg.ReplaceAllString(hostname, "")
 				if len(hostname) > 0 {
-					filename = fmt.Sprintf("%s-", hostname)
+					filename = fmt.Sprintf("%s.", hostname)
 				}
 			}
 
 			filename = fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s%d", filename, hash), string(0), "", -1))
-			if filename[0:1] == "/" {
+			/*if filename[0:1] == "/" {
 				if len(filename) > linuxFilenameSizeLimit {
 					filename = filename[0:linuxFilenameSizeLimit]
 				}
@@ -144,10 +144,13 @@ func uploadHandler(ws *websocket.Conn) {
 				if err != nil {
 					glog.Fatalf("could not get working directory: %s", err)
 				}
+				fullFilename := fmt.Sprintf("%s/%s", cwd, filename)
 				if len(fmt.Sprintf("%s/%s", cwd, filename)) > linuxFilenameSizeLimit {
-					filename = filename[0:linuxFilenameSizeLimit]
+					6 < filename < linuxFilenameSizeLimit-cwd
+					filename = linuxFilenameSizeLimit-cwd
+					filename = filename[0:int(math.Min(linuxFilenameSizeLimit, float64(len(filename)-7)))]
 				}
-			}
+			}*/
 
 			file, ok := files[filename]
 			if !ok {
