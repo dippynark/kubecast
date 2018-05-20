@@ -1,7 +1,6 @@
 package asciinema
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -10,15 +9,15 @@ import (
 	"github.com/dippynark/kubepf/pkg/server"
 )
 
-type header struct {
+type Header struct {
 	Version   int   `json:"version"`
 	Width     int   `json:"width"`
 	Height    int   `json:"height"`
 	Timestamp int64 `json:"timestamp"`
 }
 
-func Init(ttyWrite *server.TtyWrite, file *os.File) error {
-	h := header{
+func Init(ttyWrite *server.TtyWrite, file *os.File) (int64, error) {
+	h := Header{
 		Version:   2,
 		Width:     80,
 		Height:    80,
@@ -27,34 +26,24 @@ func Init(ttyWrite *server.TtyWrite, file *os.File) error {
 
 	b, err := json.Marshal(h)
 	if err != nil {
-		return fmt.Errorf("failed to marshal JSON: %s", err)
+		return 0, fmt.Errorf("failed to marshal JSON: %s", err)
 	}
 
 	bytesWritten, err := file.Write(b)
 	if err != nil {
-		return fmt.Errorf("write failed: %s", err)
+		return 0, fmt.Errorf("write failed: %s", err)
 	}
 	if bytesWritten != len(b) {
-		return fmt.Errorf("failed to write all bytes")
+		return 0, fmt.Errorf("failed to write all bytes")
 	}
 
-	return nil
+	return h.Timestamp, nil
 }
 
-func Append(ttyWrite *server.TtyWrite, file *os.File) error {
-
-	//file.Seek(0, 0)
-	scanner := bufio.NewScanner(file)
-	scanner.Scan()
-
-	var h header
-	err := json.Unmarshal([]byte(scanner.Text()), &h)
-	if err != nil {
-		return fmt.Errorf("failed to unmarshal JSON: %s", err)
-	}
+func Append(ttyWrite *server.TtyWrite, file *os.File, timestamp int64) error {
 
 	var entry []interface{}
-	entry = append(entry, ((float64(ttyWrite.Timestamp))/1000000000)-(float64(h.Timestamp)))
+	entry = append(entry, ((float64(ttyWrite.Timestamp))/1000000000)-(float64(timestamp)))
 	entry = append(entry, "o")
 	entry = append(entry, strings.Replace(string(ttyWrite.Buffer[0:ttyWrite.Count]), "\n", "\r\n", -1))
 
@@ -72,8 +61,6 @@ func Append(ttyWrite *server.TtyWrite, file *os.File) error {
 	if bytesWritten != len(b) {
 		return fmt.Errorf("failed to write all bytes")
 	}
-
-	//file.Sync()
 
 	return nil
 }

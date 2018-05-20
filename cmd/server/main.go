@@ -3,9 +3,11 @@
 package main
 
 import (
+	"bufio"
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/binary"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io"
@@ -94,6 +96,7 @@ func listHandler(ws *websocket.Conn) {
 func uploadHandler(ws *websocket.Conn) {
 	glog.Errorf("upload handler invoked")
 	var files = make(map[string](*os.File))
+	var timestamps = make(map[string](int64))
 
 	for {
 
@@ -123,10 +126,12 @@ func uploadHandler(ws *websocket.Conn) {
 					}
 					defer file.Close()
 
-					err = asciinema.Init(&ttyWrite, file)
+					timestamp, err := asciinema.Init(&ttyWrite, file)
 					if err != nil {
 						glog.Fatalf("failed to initialise: %s", err)
 					}
+
+					timestamps[filename] = timestamp
 				} else if !os.IsNotExist(err) {
 
 					file, err = os.OpenFile(filename, os.O_APPEND|os.O_RDWR, 0775)
@@ -140,7 +145,29 @@ func uploadHandler(ws *websocket.Conn) {
 				files[sha] = file
 			}
 
-			err = asciinema.Append(&ttyWrite, file)
+			timestamp, ok := timestamps[filename]
+			if !ok {
+				temp, err := os.OpenFile(filename, os.O_RDONLY, 0775)
+				if err != nil {
+					glog.Fatalf("failed to open file %s to read timestamp: %s", filename, err)
+				}
+				temp.Seek(0, 0)
+				scanner := bufio.NewScanner(temp)
+				scanner.Scan()
+
+				var h asciinema.Header
+				err = json.Unmarshal([]byte(scanner.Text()), &h)
+				if err != nil {
+					glog.Fatalf("failed to unmarshal JSON: %s", err)
+				}
+
+				timestamp = h.Timestamp
+				timestamps[filename] = timestamp
+
+				temp.Close()
+			}
+
+			err = asciinema.Append(&ttyWrite, file, timestamp)
 			if err != nil {
 				glog.Fatalf("failed to write entry: %s", err)
 			}
