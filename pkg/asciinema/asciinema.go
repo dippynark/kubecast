@@ -20,7 +20,7 @@ func Init(ttyWrite *server.TtyWrite, file *os.File) (int64, error) {
 	h := Header{
 		Version:   2,
 		Width:     80,
-		Height:    80,
+		Height:    32,
 		Timestamp: int64(ttyWrite.Timestamp / 1000000000),
 	}
 
