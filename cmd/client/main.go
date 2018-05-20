@@ -37,7 +37,7 @@ func main() {
 	for {
 
 		// connect to server
-		ws, err = websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
+		ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
 		if err != nil {
 			glog.Errorf("failed to connect to server: %s", err)
 			sleep(1)
