@@ -84,7 +84,7 @@ func main() {
 				copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
 				copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
 
-				glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
+				//glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
 
 				err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
 				if err != nil {
@@ -137,6 +137,8 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 
 			mountNamespace := strings.Split(strings.Split(mountNamespaceFile, "[")[1], "]")[0]
 			mountNamespaceToContainerLabels[mountNamespace] = ContainerJSON.Config.Labels
+
+			glog.Errorf("%#v", ContainerJSON.Config.Labels)
 
 		}
 	}
