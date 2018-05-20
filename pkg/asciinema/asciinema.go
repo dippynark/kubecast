@@ -46,7 +46,7 @@ func Append(ttyWrite *server.TtyWrite, file *os.File, timestamp int64) error {
 	entry = append(entry, ((float64(ttyWrite.Timestamp))/1000000000)-(float64(timestamp)))
 	entry = append(entry, "o")
 	// Correct newlines and replace \u000e with \u0000 due to https://github.com/asciinema/asciinema-player/issues/91
-	entry = append(entry, strings.Replace(strings.Replace(fmt.Printf("%d %s", ttyWrite.MountNamespaceInum, string(ttyWrite.Buffer[0:ttyWrite.Count]), "\n", "\r\n", -1), "\u000e", "\u0000", -1))
+	entry = append(entry, strings.Replace(strings.Replace(string(ttyWrite.Buffer[0:ttyWrite.Count]), "\n", "\r\n", -1), "\u000e", "\u0000", -1))
 
 	b, err := json.Marshal(entry)
 	if err != nil {
