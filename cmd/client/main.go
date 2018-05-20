@@ -75,7 +75,7 @@ func main() {
 				ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
 				containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
 				if !ok {
-					mountNamespaceToContainerLabels := refresh(cli)
+					mountNamespaceToContainerLabels = refresh(cli)
 					containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
 				}
 
