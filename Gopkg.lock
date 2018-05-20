@@ -69,7 +69,7 @@
     "pkg/bpffs",
     "pkg/cpuonline"
   ]
-  revision = "81c26b7026fa174bd0ac0e26f3c29ba66fd9b2c0"
+  revision = "c4ceec67cf1a399308813f890adfe89dea1f0a20"
 
 [[projects]]
   name = "github.com/pkg/errors"
@@ -87,7 +87,7 @@
     "proxy",
     "websocket"
   ]
-  revision = "640f4622ab692b87c2f3a94265e6f579fe38263d"
+  revision = "57065200b4b034a1c8ad54ff77069408c2218ae6"
 
 [[projects]]
   branch = "master"
@@ -98,6 +98,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6e3c7e2e9c29ad97a691d789f15971fd464a8c7bfdaae4bad4e929162e1dd70b"
+  inputs-digest = "99d5f673baf3d28b293eddbc5785e1b0a01d0fd33dd6e3faf368e607a2467827"
   solver-name = "gps-cdcl"
   solver-version = 1
