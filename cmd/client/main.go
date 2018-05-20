@@ -73,10 +73,10 @@ func main() {
 				}
 
 				ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
-				containerLabels, ok := mountNamespaceToContainerLabels[ttyWriteGo.MountNamespaceInum]
+				containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%s", ttyWriteGo.MountNamespaceInum)]
 				if !ok {
 					mountNamespaceToContainerLabels := refresh(cli)
-					containerLabels, ok = mountNamespaceToContainerLabels[ttyWriteGo.MountNamespaceInum]
+					containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%s", ttyWriteGo.MountNamespaceInum)]
 				}
 
 				copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
@@ -103,7 +103,7 @@ func main() {
 
 func refresh(cli *client.Client) map[uint64](map[string]string) {
 
-	mountNamespaceToContainerLabels := make(map[uint64](map[string]string))
+	mountNamespaceToContainerLabels := make(map[string](map[string]string))
 
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
@@ -134,7 +134,7 @@ func refresh(cli *client.Client) map[uint64](map[string]string) {
 			}
 
 			mountNamespace := strings.Split(strings.Split(mountNamespaceFile, "[")[1], "]")[0]
-			mountNamespaceToContainerLabels[uint64(mountNamespace)] = container.Config.Labels
+			mountNamespaceToContainerLabels[mountNamespace] = container.Config.Labels
 
 		}
 	}
