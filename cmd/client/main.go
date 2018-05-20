@@ -25,12 +25,6 @@ func main() {
 	serverAddress := *serverAddressFlag
 	port := *portFlag
 
-	// connect to server
-	ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
-	if err != nil {
-		glog.Fatalf("failed to connect to server: %s", err)
-	}
-
 	channel := make(chan []byte)
 	lostChannel := make(chan uint64)
 
@@ -41,25 +35,39 @@ func main() {
 	glog.Info("loaded BPF program successfully")
 
 	for {
-		select {
-		case ttyWrite, ok := <-channel:
 
-			if !ok {
-				glog.Fatal("channel closed")
+		// connect to server
+		ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
+		if err != nil {
+			glog.Errorf("failed to connect to server: %s", err)
+			sleep(1)
+			continue
+		}
+
+		for {
+
+			select {
+			case ttyWrite, ok := <-channel:
+
+				if !ok {
+					glog.Fatal("channel closed")
+				}
+
+				ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
+
+				err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
+				if err != nil {
+					glog.Errorf("failed to write to websocket connection: %s", err)
+					ws.Close()
+					break
+				}
+
+			case lost, ok := <-lostChannel:
+				if !ok {
+					glog.Fatal("lost channel closed")
+				}
+				glog.Errorf("data lost: %#v", lost)
 			}
-
-			ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
-
-			err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
-			if err != nil {
-				glog.Fatalf("failed to write to websocket connection: %s", err)
-			}
-
-		case lost, ok := <-lostChannel:
-			if !ok {
-				glog.Fatal("lost channel closed")
-			}
-			glog.Errorf("data lost: %#v", lost)
 		}
 	}
 }
