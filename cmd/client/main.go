@@ -84,6 +84,8 @@ func main() {
 				copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
 				copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
 
+				glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
+
 				err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
 				if err != nil {
 					glog.Errorf("failed to write to websocket connection: %s", err)
