@@ -4,12 +4,11 @@ package main
 
 import (
 	"bufio"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"hash/fnv"
 	"io"
 	"net/http"
 	"os"
@@ -111,12 +110,10 @@ func uploadHandler(ws *websocket.Conn) {
 			glog.Fatalf("failed to read from websocket connection: %s", err)
 		} else {
 
-			//hash - hostname mount-namespace inode filesystem-identifier
-			hasher := sha1.New()
-			hasher.Write([]byte(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)))
-			sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+			//hash = hostname mount-namespace inode filesystem-identifier
+			hash := hash(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum))
 
-			filename := fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s-%s-%s-%s", ttyWrite.PodNamespace, ttyWrite.PodName, ttyWrite.ContainerName, sha), string(0), "", -1))
+			filename := fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s-%s-%s-%d", ttyWrite.PodNamespace, ttyWrite.PodName, ttyWrite.ContainerName, hash), string(0), "", -1))
 			if filename[0:1] == "/" {
 				if len(filename) > linuxFilenameSizeLimit {
 					filename = filename[0:linuxFilenameSizeLimit]
@@ -191,4 +188,10 @@ func uploadHandler(ws *websocket.Conn) {
 			}
 		}
 	}
+}
+
+func hash(s string) uint32 {
+	h := fnv.New32a()
+	h.Write([]byte(s))
+	return h.Sum32()
 }
