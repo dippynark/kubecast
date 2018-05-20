@@ -13,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
 
@@ -115,7 +116,12 @@ func uploadHandler(ws *websocket.Conn) {
 
 			filename := ""
 			for _, attribute := range []string{fmt.Sprintf("%s", ttyWrite.PodNamespace), fmt.Sprintf("%s", ttyWrite.PodName), fmt.Sprintf("%s", ttyWrite.ContainerName)} {
-				attribute = strings.Replace(attribute, string(0), "", -1)
+				regex := "[^a-zA-Z0-9]+"
+				reg, err := regexp.Compile("[^a-zA-Z0-9]+")
+				if err != nil {
+					glog.Fatalf("failed to compile regular expression %s: %s", regex, err)
+				}
+				attribute = reg.ReplaceAllString(attribute, "")
 				if len(attribute) > 0 {
 					filename = fmt.Sprintf("%s-", attribute)
 				}
