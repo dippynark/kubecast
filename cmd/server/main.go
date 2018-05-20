@@ -4,6 +4,8 @@ package main
 
 import (
 	"bufio"
+	"crypto/sha1"
+	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -109,14 +111,25 @@ func uploadHandler(ws *websocket.Conn) {
 			glog.Fatalf("failed to read from websocket connection: %s", err)
 		} else {
 
-			//hash - hostname mount-namespace filesystem-identifier
-			//hasher := sha1.New()
-			//hasher.Write([]byte(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)))
-			//sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-			//filename := fmt.Sprintf("%s/%s.cast", dataPath, sha)
+			//hash - hostname mount-namespace inode filesystem-identifier
+			hasher := sha1.New()
+			hasher.Write([]byte(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)))
+			sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 
-			//filename := fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s-%d-%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum), string(0), "", -1))
-			filename := fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s-%s-%s-%s-%d-%d", ttyWrite.ContainerName, ttyWrite.PodName, ttyWrite.PodNamespace, ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum), string(0), "", -1))[0 : linuxFilenameSizeLimit-5]
+			filename := fmt.Sprintf("%s/%s.cast", dataPath, strings.Replace(fmt.Sprintf("%s-%s-%s-%s", ttyWrite.PodNamespace, ttyWrite.PodName, ttyWrite.ContainerName, sha), string(0), "", -1))
+			if filename[0:1] == "/" {
+				if len(filename) > linuxFilenameSizeLimit {
+					filename = filename[0:linuxFilenameSizeLimit]
+				}
+			} else {
+				cwd, err := os.Getwd()
+				if err != nil {
+					glog.Fatalf("could not get working directory: %s", err)
+				}
+				if len(fmt.Sprintf("%s/%s", cwd, filename)) > linuxFilenameSizeLimit {
+					filename = filename[0:linuxFilenameSizeLimit]
+				}
+			}
 
 			//file, ok := files[sha]
 			file, ok := files[filename]
