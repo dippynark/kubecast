@@ -24,10 +24,15 @@ spec:
         volumeMounts:
         - name: sys-kernel-debug
           mountPath: /sys/kernel/debug
+        - name: docker-socket
+          mountPath: /var/run/docker.sock
       volumes:
       - name: sys-kernel-debug
         hostPath: 
           path: /sys/kernel/debug
+      - name: docker-socket
+        hostPath:
+          path: /var/run/docker.sock
 ---
 apiVersion: v1
 kind: Service
