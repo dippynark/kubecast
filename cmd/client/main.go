@@ -136,7 +136,7 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 			}
 
 			mountNamespace := strings.Split(strings.Split(mountNamespaceFile, "[")[1], "]")[0]
-			mountNamespaceToContainerLabels[mountNamespace] = container.Labels
+			mountNamespaceToContainerLabels[mountNamespace] = ContainerJSON.Config.Labels
 
 		}
 	}
