@@ -43,7 +43,7 @@ func Init(ttyWrite *server.TtyWrite, file *os.File) error {
 
 func Append(ttyWrite *server.TtyWrite, file *os.File) error {
 
-	file.Seek(0, 0)
+	//file.Seek(0, 0)
 	scanner := bufio.NewScanner(file)
 	scanner.Scan()
 
@@ -72,6 +72,8 @@ func Append(ttyWrite *server.TtyWrite, file *os.File) error {
 	if bytesWritten != len(b) {
 		return fmt.Errorf("failed to write all bytes")
 	}
+
+	//file.Sync()
 
 	return nil
 }
