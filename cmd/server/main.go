@@ -4,8 +4,6 @@ package main
 
 import (
 	"bufio"
-	"crypto/sha1"
-	"encoding/base64"
 	"encoding/binary"
 	"encoding/json"
 	"flag"
@@ -110,12 +108,14 @@ func uploadHandler(ws *websocket.Conn) {
 		} else {
 
 			//hash - hostname mount-namespace filesystem-identifier
-			hasher := sha1.New()
-			hasher.Write([]byte(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)))
-			sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
-			filename := fmt.Sprintf("%s/%s.cast", dataPath, sha)
+			//hasher := sha1.New()
+			//hasher.Write([]byte(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)))
+			//sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
+			//filename := fmt.Sprintf("%s/%s.cast", dataPath, sha)
+			filename := fmt.Sprintf("%s-%d-%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum)
 
-			file, ok := files[sha]
+			//file, ok := files[sha]
+			file, ok := files[filename]
 			if !ok {
 
 				if _, err = os.Stat(filename); os.IsNotExist(err) {
@@ -142,7 +142,8 @@ func uploadHandler(ws *websocket.Conn) {
 
 				}
 
-				files[sha] = file
+				//files[sha] = file
+				files[filename] = file
 			}
 
 			timestamp, ok := timestamps[filename]
