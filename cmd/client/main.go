@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"sleep"
+	"time"
 
 	"github.com/dippynark/kubepf/pkg/kubepf"
 	"github.com/golang/glog"
@@ -41,7 +41,7 @@ func main() {
 		ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
 		if err != nil {
 			glog.Errorf("failed to connect to server: %s", err)
-			sleep(1)
+			time.Sleep(1)
 			continue
 		}
 
