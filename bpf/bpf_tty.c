@@ -8,7 +8,6 @@
 #include <linux/bpf.h>
 #include <linux/fs.h>
 #include <linux/ns_common.h>
-#include <linux/mount.h>
 
 #include "bpf_helpers.h"
 #include "bpf_tty.h"
@@ -21,6 +20,17 @@ struct bpf_map_def SEC("maps/tty_writes") tty_writes = {
     .max_entries = 1024,
     .pinning = 0,
     .namespace = "",
+};
+
+/*
+ * XXX: struct mnt_namespace is defined in fs/mount.h, which is private to the
+ * VFS and not installed in any kernel-devel packages. So, let's duplicate the
+ * important part of the definition. There are actually more members in the
+ * real struct, but we don't need them, and they're more likely to change.
+ */
+struct mnt_namespace {
+    atomic_t count;
+    struct ns_common ns;
 };
 
 SEC("kprobe/tty_write")
