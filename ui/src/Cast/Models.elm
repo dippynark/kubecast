@@ -9,6 +9,7 @@ type Route
 type alias Model =
     { cast : String
     , casts : List String
+    , labels : List String
     , location : Location
     }
 
@@ -16,5 +17,6 @@ initialModel : Location -> Model
 initialModel location =
     { cast = ""
     , casts = []
+    , labels = []
     , location = location
     }

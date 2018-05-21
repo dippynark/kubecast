@@ -8,9 +8,9 @@ import String.Extra exposing (..)
 import Cast.Msgs exposing (Msg)
 import Cast.Models exposing (Model)
 
-castOption : a -> Html Msg
-castOption cast =
-    option [ value (toString cast) ] [ text (unquote (toString cast)) ]
+castOption : a -> b -> Html Msg
+castOption cast labels =
+    option [ value (toString cast) ] [ text (unquote (toString labels)) ]
 
 view : Model -> Html Msg
 view model =
@@ -18,7 +18,7 @@ view model =
         div [ class "row" ] [
             h2 [ class "text-center" ] [ text "Terminal Sessions" ]
             , select [ onInput Cast.Msgs.DisplayCast ]
-                (List.map castOption model.casts)
+                (List.map2 castOption model.casts model.labels)
         ], div [ class "row" ] [
             div [ id "asciinema-player-container", class "container" ] [ ]
         ]

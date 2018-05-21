@@ -4,6 +4,7 @@ import Cast.Msgs exposing (Msg)
 import Cast.Models exposing (Model)
 import Array exposing (fromList, get)
 import String exposing (trim)
+import Cast.Helpers exposing (oddElements, evenElements)
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -12,10 +13,11 @@ update msg model =
             ( { model | cast = cast }, displayCast cast)
         Cast.Msgs.ListCasts castsString ->
             let
-                casts = String.split "\n" (trim castsString)
+                casts = oddElements (String.split "\n" (trim castsString))
+                labels = evenElements (String.split "\n" (trim castsString))
                 (cast, command) = setCastIfEmpty model.cast casts 
             in
-                ( { model | cast = cast, casts = casts}, command)
+                ( { model | cast = cast, casts = casts, labels = labels}, command)
         Cast.Msgs.OnLocationChange location ->
             ( { model | location = location }, Cmd.none)
 

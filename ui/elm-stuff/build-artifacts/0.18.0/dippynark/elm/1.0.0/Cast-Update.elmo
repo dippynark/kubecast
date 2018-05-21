@@ -38,10 +38,17 @@ var _dippynark$elm$Cast_Update$update = F2(
 					_1: _dippynark$elm$Cast_Update$displayCast(_p3)
 				};
 			case 'ListCasts':
-				var casts = A2(
-					_elm_lang$core$String$split,
-					'\n',
-					_elm_lang$core$String$trim(_p2._0));
+				var _p5 = _p2._0;
+				var labels = _dippynark$elm$Cast_Helpers$evenElements(
+					A2(
+						_elm_lang$core$String$split,
+						'\n',
+						_elm_lang$core$String$trim(_p5)));
+				var casts = _dippynark$elm$Cast_Helpers$oddElements(
+					A2(
+						_elm_lang$core$String$split,
+						'\n',
+						_elm_lang$core$String$trim(_p5)));
 				var _p4 = A2(_dippynark$elm$Cast_Update$setCastIfEmpty, model.cast, casts);
 				var cast = _p4._0;
 				var command = _p4._1;
@@ -49,7 +56,7 @@ var _dippynark$elm$Cast_Update$update = F2(
 					ctor: '_Tuple2',
 					_0: _elm_lang$core$Native_Utils.update(
 						model,
-						{cast: cast, casts: casts}),
+						{cast: cast, casts: casts, labels: labels}),
 					_1: command
 				};
 			default:

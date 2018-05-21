@@ -1,20 +1,21 @@
-var _dippynark$elm$Cast_View$castOption = function (cast) {
-	return A2(
-		_elm_lang$html$Html$option,
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html_Attributes$value(
-				_elm_lang$core$Basics$toString(cast)),
-			_1: {ctor: '[]'}
-		},
-		{
-			ctor: '::',
-			_0: _elm_lang$html$Html$text(
-				_elm_community$string_extra$String_Extra$unquote(
-					_elm_lang$core$Basics$toString(cast))),
-			_1: {ctor: '[]'}
-		});
-};
+var _dippynark$elm$Cast_View$castOption = F2(
+	function (cast, labels) {
+		return A2(
+			_elm_lang$html$Html$option,
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html_Attributes$value(
+					_elm_lang$core$Basics$toString(cast)),
+				_1: {ctor: '[]'}
+			},
+			{
+				ctor: '::',
+				_0: _elm_lang$html$Html$text(
+					_elm_community$string_extra$String_Extra$unquote(
+						_elm_lang$core$Basics$toString(labels))),
+				_1: {ctor: '[]'}
+			});
+	});
 var _dippynark$elm$Cast_View$view = function (model) {
 	return A2(
 		_elm_lang$html$Html$div,
@@ -55,7 +56,7 @@ var _dippynark$elm$Cast_View$view = function (model) {
 								_0: _elm_lang$html$Html_Events$onInput(_dippynark$elm$Cast_Msgs$DisplayCast),
 								_1: {ctor: '[]'}
 							},
-							A2(_elm_lang$core$List$map, _dippynark$elm$Cast_View$castOption, model.casts)),
+							A3(_elm_lang$core$List$map2, _dippynark$elm$Cast_View$castOption, model.casts, model.labels)),
 						_1: {ctor: '[]'}
 					}
 				}),
