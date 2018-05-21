@@ -84,7 +84,7 @@ func listHandler(ws *websocket.Conn) {
 
 			basename := filepath.Base(file)
 			hashString := basename[0 : len(basename)-len(filepath.Ext(basename))]
-			hashInt, err := strconv.ParseInt(hashString, 10, 32)
+			hashInt, err := strconv.ParseInt(hashString, 10, 64)
 			if err != nil {
 				glog.Fatalf("failed to parse %s to int: %s", hashString, err)
 			}
