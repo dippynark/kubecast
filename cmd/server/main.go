@@ -14,7 +14,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
-	"strings"
+	"strconv"
 	"time"
 
 	"github.com/dippynark/kubepf/pkg/asciinema"
@@ -70,6 +70,9 @@ func healthzHandler(rw http.ResponseWriter, r *http.Request) {
 
 func listHandler(ws *websocket.Conn) {
 	glog.Errorf("list handler invoked")
+
+	var labels = make(map[uint32]([]string))
+
 	for {
 
 		message := ""
@@ -78,18 +81,53 @@ func listHandler(ws *websocket.Conn) {
 			glog.Fatalf("could not list files: %s", err)
 		}
 		for _, file := range files {
-			message += (file + "\n")
+
+			basename := filepath.Base(file)
+			hashString := basename[0 : len(basename)-len(filepath.Ext(basename))]
+			hashInt, err := strconv.ParseInt(hashString, 10, 32)
+			if err != nil {
+				glog.Fatalf("failed to parse %s to int: %s", hashString, err)
+			}
+			hash := uint32(hashInt)
+
+			labelsArray, ok := labels[hash]
+			if !ok {
+
+				labelsFilename := fmt.Sprintf("%s%s", file, ".labels")
+				labelsFile, err := os.OpenFile(labelsFilename, os.O_RDONLY, 0775)
+				if err != nil {
+					glog.Fatalf("failed to open file %s: %s", labelsFilename, err)
+				}
+				scanner := bufio.NewScanner(labelsFile)
+				for scanner.Scan() {
+					labels[hash] = append(labels[hash], scanner.Text())
+				}
+				if err := scanner.Err(); err != nil {
+					glog.Fatalf("failed to read file %s: %s", labelsFilename, err)
+				}
+				labelsFile.Close()
+
+				labelsArray = labels[hash]
+			}
+
+			labelsString := ""
+			for _, label := range labelsArray {
+				labelsString = fmt.Sprintf("%s%s.", labelsString, label)
+			}
+
+			message += (file + "\n" + labelsString + "\n")
 		}
 
 		n, err := ws.Write([]byte(message))
-		if n != len(message) {
-			glog.Errorf("could only write %d out of %d bytes", n, len(message))
-			return
-		}
 		if err != nil {
 			glog.Errorf("failed to write message: %s", err)
 			return
 		}
+		if n != len(message) {
+			glog.Errorf("could only write %d out of %d bytes", n, len(message))
+			return
+		}
+
 		time.Sleep(time.Second)
 	}
 
@@ -97,8 +135,8 @@ func listHandler(ws *websocket.Conn) {
 
 func uploadHandler(ws *websocket.Conn) {
 	glog.Errorf("upload handler invoked")
-	var files = make(map[string](*os.File))
-	var timestamps = make(map[string](int64))
+	var files = make(map[uint32](*os.File))
+	var timestamps = make(map[uint32](int64))
 
 	for {
 
@@ -113,34 +151,51 @@ func uploadHandler(ws *websocket.Conn) {
 
 			//hash = hostname mount-namespace inode filesystem-identifier
 			hash := hash(fmt.Sprintf("%s%d%d", ttyWrite.Hostname, ttyWrite.Inode, ttyWrite.MountNamespaceInum))
-
 			filename := ""
 			regex := "[^a-zA-Z0-9-]+"
+			labels := []string{
+				fmt.Sprintf("%s", ttyWrite.PodNamespace),
+				fmt.Sprintf("%s", ttyWrite.PodName),
+				fmt.Sprintf("%s", ttyWrite.ContainerName),
+				fmt.Sprintf("%s", ttyWrite.Hostname)}
+
 			reg, err := regexp.Compile(regex)
 			if err != nil {
 				glog.Fatalf("failed to compile regular expression %s: %s", regex, err)
 			}
-			for _, attribute := range []string{fmt.Sprintf("%s", ttyWrite.PodNamespace), fmt.Sprintf("%s", ttyWrite.PodName), fmt.Sprintf("%s", ttyWrite.ContainerName)} {
-				attribute = reg.ReplaceAllString(attribute, "")
-				if len(attribute) > 0 {
-					filename = fmt.Sprintf("%s%s.", filename, attribute)
-				}
-			}
-			if len(filename) == 0 {
-				hostname := fmt.Sprintf("%s", ttyWrite.Hostname)
-				hostname = reg.ReplaceAllString(hostname, "")
-				if len(hostname) > 0 {
-					filename = fmt.Sprintf("%s.", hostname)
-				}
+			for i, label := range labels {
+				labels[i] = reg.ReplaceAllString(label, "")
 			}
 
-			extension := ".cast"
-			if len(filename) > linuxFilenameSizeLimit-len(extension) {
-				filename = filename[0 : linuxFilenameSizeLimit-len(extension)]
-			}
-			filename = fmt.Sprintf("%s/%s%s", dataPath, strings.Replace(fmt.Sprintf("%s%d", filename, hash), string(0), "", -1), extension)
+			labelsFilename := fmt.Sprintf("%s/%d.cast.labels", dataPath, hash)
+			if _, err = os.Stat(labelsFilename); os.IsNotExist(err) {
 
-			file, ok := files[filename]
+				labelFile, err := os.OpenFile(labelsFilename, os.O_CREATE|os.O_RDWR, 0775)
+				if err != nil {
+					glog.Fatalf("failed to open file %s: %s", labelsFilename, err)
+				}
+				labelsString := ""
+				for _, label := range labels {
+					labelsString = fmt.Sprintf("%s%s\n", labelsString, label)
+				}
+
+				n, err := labelFile.Write([]byte(labelsString))
+				if err != nil {
+					glog.Errorf("failed to write labels: %s", err)
+					return
+				}
+				if n != len(labelsString) {
+					glog.Errorf("could only write %d out of %d bytes", n, len(labelsString))
+					return
+				}
+				labelFile.Close()
+
+			} else if err != nil {
+				glog.Fatalf("failed to stat file %s: %s", labelsFilename, err)
+			}
+
+			filename = fmt.Sprintf("%s/%d.cast", dataPath, hash)
+			file, ok := files[hash]
 			if !ok {
 
 				if _, err = os.Stat(filename); os.IsNotExist(err) {
@@ -156,8 +211,12 @@ func uploadHandler(ws *websocket.Conn) {
 						glog.Fatalf("failed to initialise: %s", err)
 					}
 
-					timestamps[filename] = timestamp
-				} else if !os.IsNotExist(err) {
+					timestamps[hash] = timestamp
+				} else if err != nil {
+
+					glog.Fatalf("failed to stat file %s: %s", filename, err)
+
+				} else {
 
 					file, err = os.OpenFile(filename, os.O_APPEND|os.O_RDWR, 0775)
 					if err != nil {
@@ -167,10 +226,10 @@ func uploadHandler(ws *websocket.Conn) {
 
 				}
 
-				files[filename] = file
+				files[hash] = file
 			}
 
-			timestamp, ok := timestamps[filename]
+			timestamp, ok := timestamps[hash]
 			if !ok {
 				temp, err := os.OpenFile(filename, os.O_RDONLY, 0775)
 				if err != nil {
@@ -187,7 +246,7 @@ func uploadHandler(ws *websocket.Conn) {
 				}
 
 				timestamp = h.Timestamp
-				timestamps[filename] = timestamp
+				timestamps[hash] = timestamp
 
 				temp.Close()
 			}

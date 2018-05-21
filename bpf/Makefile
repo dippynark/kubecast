@@ -28,5 +28,6 @@ all: $(BPF)
 %.o: %.c
 	@mkdir -p "$(DEST_DIR)"
 	${CLANG} ${CLANG_FLAGS} -c $< -o - | ${LLC} ${LLC_FLAGS} -o "${DEST_DIR}/$@"; \
-	${GO_BINDATA} ${GO_BINDATA_FLAGS} -o "${DEST_DIR}/$(@:.o=.go)" "${DEST_DIR}/$@"
+	${GO_BINDATA} ${GO_BINDATA_FLAGS} -o "${DEST_DIR}/$(@:.o=.go)" "${DEST_DIR}/$@"; \
+	rm "${DEST_DIR}/$@"
 
