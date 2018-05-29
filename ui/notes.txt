@@ -1,4 +1,4 @@
-Move elm frontend into kubepf repo
+Move elm frontend into kubecast repo
 Make websocket work (maybe replace with something else)
 Deploy with kubernetes
 Use elm-lang/navigation to parse the location of the webserver and connect back 

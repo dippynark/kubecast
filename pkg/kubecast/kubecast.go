@@ -1,4 +1,4 @@
-package kubepf
+package kubecast
 
 import (
 	"bytes"
@@ -9,7 +9,7 @@ import (
 
 	bpflib "github.com/iovisor/gobpf/elf"
 	"github.com/golang/glog"
-	"github.com/dippynark/kubepf/pkg/server"
+	"github.com/dippynark/kubecast/pkg/server"
 )
 
 /*

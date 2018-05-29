@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/dippynark/kubepf/pkg/server"
+	"github.com/dippynark/kubecast/pkg/server"
 )
 
 type Header struct {

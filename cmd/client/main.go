@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dippynark/kubepf/pkg/kubepf"
+	"github.com/dippynark/kubecast/pkg/kubecast"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/golang/glog"
@@ -39,7 +39,7 @@ func main() {
 	channel := make(chan []byte)
 	lostChannel := make(chan uint64)
 
-	err := kubepf.New(channel, lostChannel)
+	err := kubecast.New(channel, lostChannel)
 	if err != nil {
 		glog.Fatalf("failed to load BPF module: %s", err)
 	}
@@ -72,7 +72,7 @@ func main() {
 					glog.Fatal("channel closed")
 				}
 
-				ttyWriteGo := kubepf.TtyWriteToGo(&ttyWrite)
+				ttyWriteGo := kubecast.TtyWriteToGo(&ttyWrite)
 				containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
 				if !ok {
 					mountNamespaceToContainerLabels = refresh(cli)

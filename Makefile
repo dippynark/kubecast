@@ -1,4 +1,4 @@
-GOOS := linux
+GOOS := darwin
 GOARCH := amd64
 GOLDFLAGS := -ldflags
 
@@ -12,7 +12,7 @@ PWD=$(shell pwd)
 
 DOCKER_FILE ?= Dockerfile
 REGISTRY ?= dippynark
-APP_NAME ?= kubepf
+APP_NAME ?= kubecast
 TAG ?= latest
 
 # If you can use docker without being root, you can do "make SUDO="
@@ -46,7 +46,7 @@ docker_build_bpf:
 	sudo chown -R $(UID):$(GID) bpf
 
 install_bpf:
-	cp bpf/bpf_tty.go pkg/kubepf/bpf_tty.go
+	cp bpf/bpf_tty.go pkg/kubecast/bpf_tty.go
 
 docker_clean:
 	$(SUDO) docker rmi -f $(REGISTRY)/bpf-builder

@@ -1,10 +1,10 @@
 REGISTRY ?= dippynark
-APP_NAME ?= kubepf-ui
+APP_NAME ?= kubecast-ui
 
 docker: docker_build docker_push
 
 docker_build:
-	docker build -t dippynark/kubepf-ui .
+	docker build -t dippynark/kubecast-ui .
 
 docker_push:
-	docker push dippynark/kubepf-ui
+	docker push dippynark/kubecast-ui

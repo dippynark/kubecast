@@ -1,20 +1,20 @@
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: kubepf-client
+  name: kubecast-client
 spec:
   selector:
     matchLabels:
-      app: kubepf-client
+      app: kubecast-client
   template:
     metadata:
       labels:
-        app: kubepf-client
+        app: kubecast-client
     spec:
       hostPID: true
       containers:
-      - name: kubepf
-        image: dippynark/kubepf-client:linux-headers-4.13.0-1008-gcp
+      - name: kubecast
+        image: dippynark/kubecast-client:linux-headers-4.13.0-1008-gcp
         imagePullPolicy: Always
         env:
         - name: "DOCKER_API_VERSION"
@@ -22,7 +22,7 @@ spec:
         command:
         - /usr/bin/client
         - -server
-        - kubepf-server
+        - kubecast-server
         securityContext:
           privileged: true
         volumeMounts:
@@ -41,13 +41,13 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: kubepf-server
+  name: kubecast-server
 spec: 
   type: LoadBalancer
   selector:
-    app: kubepf-server
+    app: kubecast-server
   ports:
-  - name: kubepf
+  - name: kubecast
     port: 5050
   - name: web
     port: 80
@@ -55,19 +55,19 @@ spec:
 apiVersion: apps/v1beta1
 kind: Deployment
 metadata:
-  name: kubepf-server
+  name: kubecast-server
 spec:
   selector:
     matchLabels:
-      app: kubepf-server
+      app: kubecast-server
   template:
     metadata:
       labels:
-        app: kubepf-server
+        app: kubecast-server
     spec:
       containers:
-      - name: kubepf
-        image: dippynark/kubepf-server:linux-headers-4.13.0-1008-gcp
+      - name: kubecast
+        image: dippynark/kubecast-server:linux-headers-4.13.0-1008-gcp
         imagePullPolicy: Always
         command:
         - /usr/bin/server
@@ -82,8 +82,8 @@ spec:
         volumeMounts:
         - name: data-path
           mountPath: /casts
-      - name: kubepf-ui
-        image: dippynark/kubepf-ui
+      - name: kubecast-ui
+        image: dippynark/kubecast-ui
         imagePullPolicy: Always
         ports:
         - containerPort: 80
@@ -101,7 +101,7 @@ spec:
 apiVersion: extensions/v1beta1
 kind: Ingress
 metadata:
-  name: kubepf
+  name: kubecast
 spec:  
   rules:
   - host: cast.lukeaddison.co.uk
@@ -109,10 +109,10 @@ spec:
       paths:
       - path: /list
         backend:
-          serviceName: kubepf-server
+          serviceName: kubecast-server
           servicePort: 5050
       - path: /*
         backend:
-          serviceName: kubepf-server
+          serviceName: kubecast-server
           servicePort: 80
   

@@ -17,8 +17,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dippynark/kubepf/pkg/asciinema"
-	"github.com/dippynark/kubepf/pkg/server"
+	"github.com/dippynark/kubecast/pkg/asciinema"
+	"github.com/dippynark/kubecast/pkg/server"
 	"github.com/golang/glog"
 	"golang.org/x/net/websocket"
 )
