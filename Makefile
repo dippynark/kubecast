@@ -1,4 +1,4 @@
-GOOS := darwin
+GOOS := linux
 GOARCH := amd64
 GOLDFLAGS := -ldflags
 
