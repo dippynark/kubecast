@@ -14,7 +14,7 @@ spec:
       hostPID: true
       containers:
       - name: kubecast
-        image: dippynark/kubecast-client:linux-headers-4.13.0-1008-gcp
+        image: dippynark/kubecast-client:linux-headers-4.15.0-1017-gcp
         imagePullPolicy: Always
         env:
         - name: "DOCKER_API_VERSION"
@@ -67,7 +67,7 @@ spec:
     spec:
       containers:
       - name: kubecast
-        image: dippynark/kubecast-server:linux-headers-4.13.0-1008-gcp
+        image: dippynark/kubecast-server:linux-headers-4.15.0-1017-gcp
         imagePullPolicy: Always
         command:
         - /usr/bin/server
