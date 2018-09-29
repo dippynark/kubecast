@@ -69,7 +69,7 @@ OUTER:
 
 		var ws *websocket.Conn
 		select {
-		case ws := <-connectionChannel:
+		case ws = <-connectionChannel:
 		case <-time.After(3 * time.Second):
 			continue OUTER
 		}
