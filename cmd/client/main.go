@@ -88,7 +88,7 @@ func main() {
 
 				//glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
 				//glog.Errorf("test NS: %d %#v", ttyWriteGo.MountNamespaceInum, containerLabels)
-				glog.Errorf("ttyWriteGo: %#v", ttyWriteGo)
+				glog.Errorf("ttyWriteGo: %s", ttyWriteGo)
 
 				err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
 				if err != nil {
