@@ -52,16 +52,27 @@ func main() {
 
 	mountNamespaceToContainerLabels := refresh(cli)
 
+	OUTER:
 	for {
-
-	L:
+	
 		// connect to server
 		glog.Info("attempting connection to server...")
-		ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
-		if err != nil {
-			glog.Errorf("failed to connect to server: %s", err)
-			time.Sleep(1)
-			continue
+		connectionChannel := make(chan *websocket.Conn)
+    go func() {
+			ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
+			if err != nil {
+				glog.Errorf("failed to connect to server: %s", err)
+				time.Sleep(1)
+				continue OUTER
+			}
+			connectionChannel <- ws
+		}()		
+
+		ws *websocket.Conn
+    select {
+    case ws := <-connectionChannel:
+    case <-time.After(5 * time.Second):
+        continue OUTER
 		}
 		glog.Info("connection successful")
 
@@ -94,7 +105,7 @@ func main() {
 				if err != nil {
 					glog.Errorf("failed to write to websocket connection: %s", err)
 					ws.Close()
-					goto L
+					continue OUTER
 				}
 
 			case lost, ok := <-lostChannel:
