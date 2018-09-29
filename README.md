@@ -6,12 +6,7 @@ kubecast fills in this missing information and allows operators to see exactly w
 
 ## Warning 
 
-This project is strictly alpha and kubecast injects code that is run in kernel space. Although this code runs on an in-kernel VM and should be safe, there can be perfomance implications - use at your own risk!
-
-## Quickstart 
-
-- gcloud container clusters create test --image-type UBUNTU
-- /usr/src/linux-gcp-headers-4.13.0-1008 and /usr/src/linux-headers-4.13.0-1008-gcp
+This project is strictly alpha and kubecast injects code that is run in kernel space. Although this code runs on an in-kernel VM and should be safe, there can be performance implications - use at your own risk!
 
 ### Prerequisites
 
@@ -20,8 +15,21 @@ This project is strictly alpha and kubecast injects code that is run in kernel s
 ### Build
 
 ```
-make all
+apt-cache search linux-image
+apt-get install linux-image-4.15.0-1019-gcp
+# reboot
+apt-get install linux-headers-`uname -r`
+make
+make docker_push
 ```
+
+# Run
+
+```
+gcloud container clusters create kubecast --image-type UBUNTU
+```
+
+### Debug
 
 The generated object file can be viewed using `llvm-objdump`
 
