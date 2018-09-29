@@ -113,13 +113,13 @@ OUTER:
 				case err = <-errorChannel:
 				case <-time.After(3 * time.Second):
 					glog.Errorf("timeout writing TTY write")
-					ws.Close()
+					//ws.Close()
 					continue OUTER
 				}
 
 				if err != nil {
 					glog.Errorf("failed to write to websocket connection: %s", err)
-					ws.Close()
+					//ws.Close()
 					continue OUTER
 				}
 
