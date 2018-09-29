@@ -72,10 +72,11 @@ OUTER:
 		case ws = <-connectionChannel:
 		case <-time.After(3 * time.Second):
 			glog.Errorf("timeout connecting to server")
-			continue OUTER
+			continue
 		}
 		glog.Info("connection successful")
 
+		// send TTY writes
 		for {
 
 			select {
@@ -101,7 +102,21 @@ OUTER:
 				//glog.Errorf("test NS: %d %#v", ttyWriteGo.MountNamespaceInum, containerLabels)
 				//glog.Errorf("MountNamespaceInum: %s", ttyWriteGo.MountNamespaceInum)
 
-				err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
+				errorChannel := make(chan error)
+				go func() {
+					err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
+					errorChannel <- err
+				}()
+
+				var err error
+				select {
+				case err = <-errorChannel:
+				case <-time.After(3 * time.Second):
+					glog.Errorf("timeout writing TTY write")
+					ws.Close()
+					continue OUTER
+				}
+
 				if err != nil {
 					glog.Errorf("failed to write to websocket connection: %s", err)
 					ws.Close()
