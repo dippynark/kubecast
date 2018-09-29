@@ -71,6 +71,7 @@ OUTER:
 		select {
 		case ws = <-connectionChannel:
 		case <-time.After(3 * time.Second):
+			glog.Errorf("timeout connecting to server")
 			continue OUTER
 		}
 		glog.Info("connection successful")
