@@ -125,6 +125,8 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 			continue
 		}
 
+		//glog.Errorf("NS: %#v", mountNamespace, ContainerJSON)
+
 		pid := 0
 		if ContainerJSON.ContainerJSONBase != nil {
 			if ContainerJSON.ContainerJSONBase.State != nil {
