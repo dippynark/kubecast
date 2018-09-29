@@ -13,7 +13,7 @@ PWD=$(shell pwd)
 DOCKER_FILE ?= Dockerfile
 REGISTRY ?= dippynark
 APP_NAME ?= kubecast
-TAG ?= linux-headers-4.15.0-1017-gcp
+TAG ?= $(shell uname -r)
 
 # If you can use docker without being root, you can do "make SUDO="
 SUDO=$(shell docker info >/dev/null 2>&1 || echo "sudo -E")
