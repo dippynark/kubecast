@@ -115,7 +115,7 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 		panic(err)
 	}
 
-	glog.Errorf("Debug: %#v", containers)
+	//glog.Errorf("Debug: %#v", containers)
 
 	for _, container := range containers {
 		//fmt.Printf("%s %s\n", container.ID[:10], container.)
@@ -145,7 +145,7 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 			mountNamespace := strings.Split(strings.Split(mountNamespaceFile, "[")[1], "]")[0]
 			mountNamespaceToContainerLabels[mountNamespace] = ContainerJSON.Config.Labels
 
-			//glog.Errorf("NS: %s %#v", mountNamespace, ContainerJSON.Config.Labels)
+			glog.Errorf("NS: %s %#v", mountNamespace, ContainerJSON.Config.Labels)
 
 		}
 	}
