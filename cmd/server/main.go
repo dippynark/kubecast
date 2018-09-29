@@ -158,7 +158,9 @@ func uploadHandler(ws *websocket.Conn) {
 				fmt.Sprintf("%s", ttyWrite.PodName),
 				fmt.Sprintf("%s", ttyWrite.ContainerName),
 				fmt.Sprintf("%s", ttyWrite.Hostname)}
-
+			for _, label := range labels {
+				glog.Infof("%s\n", label)
+			}
 			reg, err := regexp.Compile(regex)
 			if err != nil {
 				glog.Fatalf("failed to compile regular expression %s: %s", regex, err)

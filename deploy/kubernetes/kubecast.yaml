@@ -23,6 +23,7 @@ spec:
         - /usr/bin/client
         - -server
         - kubecast-server
+        - -logtostderr
         securityContext:
           privileged: true
         volumeMounts:
@@ -73,6 +74,7 @@ spec:
         - /usr/bin/server
         - -data-path
         - /casts
+        - -logtostderr
         ports:
         - containerPort: 5050
         readinessProbe:
