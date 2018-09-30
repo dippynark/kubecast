@@ -1,6 +1,5 @@
 SHELL=/bin/bash -o pipefail
 LINUX_HEADERS=$(shell uname -r | awk '{print "/usr/src/linux-headers-"$$1}')
-#LINUX_HEADERS=/usr/src/linux-gcp-headers-4.15.0-1017 /usr/src/linux-headers-4.15.0-1017-gcp
 DEST_DIR?=/dist
 
 BPF = bpf_tty.o
