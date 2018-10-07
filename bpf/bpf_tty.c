@@ -9,6 +9,7 @@
 #include <linux/fs.h>
 #include <linux/ns_common.h>
 #include <linux/nsproxy.h>
+#include <linux/sched.h>
 
 #include "bpf_helpers.h"
 #include "bpf_tty.h"
