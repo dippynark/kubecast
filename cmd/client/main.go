@@ -41,7 +41,7 @@ func main() {
 	}
 	glog.Info("loaded BPF program successfully")
 
-	_, err := client.NewEnvClient()
+	_, err = client.NewEnvClient()
 	if err != nil {
 		glog.Fatalf("failed to create Docker client: %s", err)
 	}
