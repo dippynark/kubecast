@@ -1,5 +1,5 @@
-apiVersion: apps/v1beta1
-kind: Deployment
+apiVersion: apps/v1
+kind: DaemonSet
 metadata:
   name: kubecast-client
 spec:
@@ -14,7 +14,7 @@ spec:
       hostPID: true
       containers:
       - name: kubecast
-        image: dippynark/kubecast-client:4.15.0-1019-gcp
+        image: dippynark/kubecast-client:4.15.0-1017-gcp
         imagePullPolicy: Always
         env:
         - name: "DOCKER_API_VERSION"
@@ -53,7 +53,7 @@ spec:
   - name: web
     port: 80
 ---
-apiVersion: apps/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: kubecast-server
@@ -68,7 +68,7 @@ spec:
     spec:
       containers:
       - name: kubecast
-        image: dippynark/kubecast-server:4.15.0-1019-gcp
+        image: dippynark/kubecast-server:4.15.0-1017-gcp
         imagePullPolicy: Always
         command:
         - /usr/bin/server
@@ -76,7 +76,8 @@ spec:
         - /casts
         - -logtostderr
         ports:
-        - containerPort: 5050
+        - name: kubecast
+          containerPort: 5050
         readinessProbe:
           httpGet:
             path: /
@@ -88,7 +89,8 @@ spec:
         image: dippynark/kubecast-ui
         imagePullPolicy: Always
         ports:
-        - containerPort: 80
+        - name: web
+          containerPort: 80
         readinessProbe:
           httpGet:
             path: /

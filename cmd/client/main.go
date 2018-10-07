@@ -50,7 +50,7 @@ func main() {
 		glog.Fatalf("failed to create Docker client: %s", err)
 	}
 
-	mountNamespaceToContainerLabels := refresh(cli)
+	//mountNamespaceToContainerLabels := refresh(cli)
 
 OUTER:
 	for {
@@ -87,16 +87,20 @@ OUTER:
 				}
 
 				ttyWriteGo := kubecast.TtyWriteToGo(&ttyWrite)
-				containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
-				if !ok {
-					mountNamespaceToContainerLabels = refresh(cli)
-					containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
-				}
+				/*
+					containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
+					if !ok {
+						mountNamespaceToContainerLabels = refresh(cli)
+						containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
+					}
+				*/
 
-				copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
-				copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
-				copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
-				copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
+				/*
+					copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
+					copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
+					copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
+					copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
+				*/
 
 				//glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
 				//glog.Errorf("test NS: %d %#v", ttyWriteGo.MountNamespaceInum, containerLabels)
@@ -135,7 +139,7 @@ OUTER:
 
 func refresh(cli *client.Client) map[string](map[string]string) {
 
-	mountNamespaceToContainerLabels := make(map[string](map[string]string))
+	//mountNamespaceToContainerLabels := make(map[string](map[string]string))
 
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
