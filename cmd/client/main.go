@@ -1,16 +1,12 @@
 package main
 
 import (
-	"context"
 	"encoding/binary"
 	"flag"
 	"fmt"
-	"os"
-	"strings"
 	"time"
 
 	"github.com/dippynark/kubecast/pkg/kubecast"
-	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/golang/glog"
 	"golang.org/x/net/websocket"
@@ -137,6 +133,7 @@ OUTER:
 	}
 }
 
+/*
 func refresh(cli *client.Client) map[string](map[string]string) {
 
 	//mountNamespaceToContainerLabels := make(map[string](map[string]string))
@@ -174,7 +171,7 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 			}
 
 			mountNamespace := strings.Split(strings.Split(mountNamespaceFile, "[")[1], "]")[0]
-			mountNamespaceToContainerLabels[mountNamespace] = ContainerJSON.Config.Labels
+			//mountNamespaceToContainerLabels[mountNamespace] = ContainerJSON.Config.Labels
 
 			//glog.Errorf("NS: %s %#v", mountNamespace, ContainerJSON.Config.Labels)
 
@@ -183,3 +180,4 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 
 	return mountNamespaceToContainerLabels
 }
+*/
