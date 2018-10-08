@@ -48,31 +48,17 @@ func main() {
 
 	//mountNamespaceToContainerLabels := refresh(cli)
 
-OUTER:
 	for {
 
+	L:
 		// connect to server
-		glog.Info("attempting connection to server...")
-		connectionChannel := make(chan *websocket.Conn)
-		go func() {
-			ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
-			if err != nil {
-				glog.Errorf("failed to connect to server: %s", err)
-				return
-			}
-			connectionChannel <- ws
-		}()
-
-		var ws *websocket.Conn
-		select {
-		case ws = <-connectionChannel:
-		case <-time.After(3 * time.Second):
-			glog.Errorf("timeout connecting to server")
+		ws, err := websocket.Dial(fmt.Sprintf("ws://%s:%d/upload", serverAddress, port), "", fmt.Sprintf("http://%s/", serverAddress))
+		if err != nil {
+			glog.Errorf("failed to connect to server: %s", err)
+			time.Sleep(1)
 			continue
 		}
-		glog.Info("connection successful")
 
-		// send TTY writes
 		for {
 
 			select {
@@ -83,15 +69,14 @@ OUTER:
 				}
 
 				ttyWriteGo := kubecast.TtyWriteToGo(&ttyWrite)
+
 				/*
 					containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
 					if !ok {
 						mountNamespaceToContainerLabels = refresh(cli)
 						containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
 					}
-				*/
 
-				/*
 					copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
 					copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
 					copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
@@ -100,27 +85,12 @@ OUTER:
 
 				//glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
 				//glog.Errorf("test NS: %d %#v", ttyWriteGo.MountNamespaceInum, containerLabels)
-				//glog.Errorf("MountNamespaceInum: %s", ttyWriteGo.MountNamespaceInum)
 
-				errorChannel := make(chan error)
-				go func() {
-					err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
-					errorChannel <- err
-				}()
-
-				var err error
-				select {
-				case err = <-errorChannel:
-				case <-time.After(3 * time.Second):
-					glog.Errorf("timeout writing TTY write")
-					//ws.Close()
-					continue OUTER
-				}
-
+				err = binary.Write(ws, binary.BigEndian, ttyWriteGo)
 				if err != nil {
 					glog.Errorf("failed to write to websocket connection: %s", err)
-					//ws.Close()
-					continue OUTER
+					ws.Close()
+					goto L
 				}
 
 			case lost, ok := <-lostChannel:
@@ -136,14 +106,12 @@ OUTER:
 /*
 func refresh(cli *client.Client) map[string](map[string]string) {
 
-	//mountNamespaceToContainerLabels := make(map[string](map[string]string))
+	mountNamespaceToContainerLabels := make(map[string](map[string]string))
 
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
 	if err != nil {
 		panic(err)
 	}
-
-	//glog.Errorf("Debug: %#v", containers)
 
 	for _, container := range containers {
 		//fmt.Printf("%s %s\n", container.ID[:10], container.)
@@ -152,8 +120,6 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 			glog.Errorf("failed to inspect container with ID %s: %s", container.ID, err)
 			continue
 		}
-
-		//glog.Errorf("NS: %#v", mountNamespace, ContainerJSON)
 
 		pid := 0
 		if ContainerJSON.ContainerJSONBase != nil {
@@ -171,7 +137,7 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 			}
 
 			mountNamespace := strings.Split(strings.Split(mountNamespaceFile, "[")[1], "]")[0]
-			//mountNamespaceToContainerLabels[mountNamespace] = ContainerJSON.Config.Labels
+			mountNamespaceToContainerLabels[mountNamespace] = ContainerJSON.Config.Labels
 
 			//glog.Errorf("NS: %s %#v", mountNamespace, ContainerJSON.Config.Labels)
 
