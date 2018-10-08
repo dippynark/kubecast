@@ -75,11 +75,11 @@ func main() {
 				}
 
 				ttyWriteGo := kubecast.TtyWriteToGo(&ttyWrite)
-				containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
+				/*containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
 				if !ok {
 					mountNamespaceToContainerLabels = refresh(cli)
 					containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
-				}
+				}*/
 
 				copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
 				copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
