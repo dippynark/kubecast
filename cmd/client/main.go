@@ -1,12 +1,16 @@
 package main
 
 import (
+	"context"
 	"encoding/binary"
 	"flag"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 
 	"github.com/dippynark/kubecast/pkg/kubecast"
+	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/golang/glog"
 	"golang.org/x/net/websocket"
@@ -41,12 +45,12 @@ func main() {
 	}
 	glog.Info("loaded BPF program successfully")
 
-	_, err = client.NewEnvClient()
+	cli, err := client.NewEnvClient()
 	if err != nil {
 		glog.Fatalf("failed to create Docker client: %s", err)
 	}
 
-	//mountNamespaceToContainerLabels := refresh(cli)
+	mountNamespaceToContainerLabels := refresh(cli)
 
 	for {
 
@@ -71,19 +75,16 @@ func main() {
 				}
 
 				ttyWriteGo := kubecast.TtyWriteToGo(&ttyWrite)
+				containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
+				if !ok {
+					mountNamespaceToContainerLabels = refresh(cli)
+					containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
+				}
 
-				/*
-					containerLabels, ok := mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
-					if !ok {
-						mountNamespaceToContainerLabels = refresh(cli)
-						containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
-					}
-
-					copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
-					copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
-					copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
-					copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
-				*/
+				copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
+				copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
+				copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
+				copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
 
 				//glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
 				//glog.Errorf("test NS: %d %#v", ttyWriteGo.MountNamespaceInum, containerLabels)
@@ -105,7 +106,6 @@ func main() {
 	}
 }
 
-/*
 func refresh(cli *client.Client) map[string](map[string]string) {
 
 	mountNamespaceToContainerLabels := make(map[string](map[string]string))
@@ -148,4 +148,3 @@ func refresh(cli *client.Client) map[string](map[string]string) {
 
 	return mountNamespaceToContainerLabels
 }
-*/
