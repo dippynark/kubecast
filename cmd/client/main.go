@@ -50,7 +50,7 @@ func main() {
 		glog.Fatalf("failed to create Docker client: %s", err)
 	}
 
-	mountNamespaceToContainerLabels := refresh(cli)
+	//mountNamespaceToContainerLabels := refresh(cli)
 
 	for {
 
