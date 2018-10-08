@@ -81,10 +81,10 @@ func main() {
 					containerLabels, ok = mountNamespaceToContainerLabels[fmt.Sprintf("%d", ttyWriteGo.MountNamespaceInum)]
 				}*/
 
-				copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
+				/*copy(ttyWriteGo.ContainerName[:], containerLabels[kubernetesContainerNameKey])
 				copy(ttyWriteGo.PodName[:], containerLabels[kubernetesPodNameKey])
 				copy(ttyWriteGo.PodNamespace[:], containerLabels[kubernetesPodNamespaceKey])
-				copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])
+				copy(ttyWriteGo.PodUID[:], containerLabels[kubernetesPodUIDKey])*/
 
 				//glog.Errorf("%s %s %s %s", containerLabels[kubernetesContainerNameKey], containerLabels[kubernetesPodNameKey], containerLabels[kubernetesPodNamespaceKey], containerLabels[kubernetesPodUIDKey])
 				//glog.Errorf("test NS: %d %#v", ttyWriteGo.MountNamespaceInum, containerLabels)
