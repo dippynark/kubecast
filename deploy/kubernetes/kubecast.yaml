@@ -1,5 +1,5 @@
 apiVersion: apps/v1
-kind: DaemonSet
+kind: Deployment
 metadata:
   name: kubecast-client
 spec:
@@ -44,7 +44,7 @@ kind: Service
 metadata:
   name: kubecast-server
 spec: 
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: kubecast-server
   ports:
